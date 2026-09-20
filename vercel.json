@@ -1,0 +1,20 @@
+{
+  "name": "aqbeds",
+  "buildCommand": "npm run build",
+  "framework": null,
+  "installCommand": "npm install",
+  "outputDirectory": "dist/client",
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/api/index"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index"
+    }
+  ]
+}
