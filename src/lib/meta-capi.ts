@@ -1,311 +1,210 @@
-import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-import { createHash } from "crypto";
+/**
+ * Meta Conversions API (CAPI) — Client-side functions.
+ * These POST to /api/meta-capi which is a standalone Vercel serverless function
+ * that hashes PII and forwards to Meta Graph API v21.0.
+ *
+ * Why NOT createServerFn? TanStack Start's createServerFn uses internal RPC
+ * which can fail silently in serverless environments. A direct POST to a
+ * standard Vercel API route is 100% reliable.
+ */
 
-const PIXEL_ID = process.env.META_PIXEL_ID || "1109711544904339";
-const CAPI_URL = `https://graph.facebook.com/v21.0/${PIXEL_ID}/events`;
-const CAPI_TOKEN = process.env.META_CAPI_ACCESS_TOKEN;
+const CAPI_ENDPOINT = "/api/meta-capi";
 
 /**
- * SHA-256 hash for PII fields. Normalizes: trim → lowercase → SHA-256.
- * Meta requires this for all user data parameters.
+ * Internal helper: POST event data to the server-side CAPI endpoint.
+ * Never crashes — logs errors to console.
  */
-function sha256(value: string): string {
-  return createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
-}
-
-/**
- * Build the user_data object with all available PII hashed.
- * Includes external_id for cross-device matching.
- * All fields: em, ph, fn, ln, ct, zp, external_id, fbp, fbc.
- */
-function hashUserData(data: {
-  email?: string;
-  phone?: string;
-  first_name?: string;
-  last_name?: string;
-  city?: string;
-  postcode?: string;
-  external_id?: string;
-  fbp?: string;
-  fbc?: string;
-}) {
-  const user_data: Record<string, string> = {};
-  if (data.email) user_data.em = sha256(data.email);
-  if (data.phone) user_data.ph = sha256(data.phone);
-  if (data.first_name) user_data.fn = sha256(data.first_name);
-  if (data.last_name) user_data.ln = sha256(data.last_name);
-  if (data.city) user_data.ct = sha256(data.city);
-  if (data.postcode) user_data.zp = sha256(data.postcode);
-  if (data.external_id) user_data.external_id = sha256(data.external_id);
-  // fbp and fbc are NOT hashed — sent raw per Meta spec
-  if (data.fbp) user_data.fbp = data.fbp;
-  if (data.fbc) user_data.fbc = data.fbc;
-  return user_data;
-}
-
-/**
- * Extract client IP from multiple sources (Vercel/serverless).
- * Tries x-forwarded-for first, then x-real-ip, then falls back to undefined.
- */
-function getClientIp(): string | undefined {
-  try {
-    // Method 1: TanStack Start request context
-    const headers = (globalThis as any).__TANSTACK_START_REQUEST__?.headers;
-    if (headers) {
-      const forwarded = headers.get("x-forwarded-for");
-      if (forwarded) return forwarded.split(",")[0].trim();
-      const realIp = headers.get("x-real-ip");
-      if (realIp) return realIp;
-    }
-  } catch {}
-
-  try {
-    // Method 2: Check common serverless env headers
-    const req = (globalThis as any).__SERVER_REQUEST__;
-    if (req?.headers) {
-      const forwarded = req.headers["x-forwarded-for"];
-      if (forwarded) return String(forwarded).split(",")[0].trim();
-      const realIp = req.headers["x-real-ip"];
-      if (realIp) return String(realIp);
-    }
-  } catch {}
-
-  return undefined;
-}
-
-/**
- * Send event to Meta Conversions API (Graph API v21.0).
- * Silently fails — never crashes order processing.
- */
-async function sendCAPIEvent(payload: {
+async function postToCAPI(payload: {
   event_name: string;
   event_time: number;
   event_id?: string;
   user_data: Record<string, string>;
+  custom_data?: Record<string, any>;
+  action_source?: string;
   client_ip_address?: string;
   client_user_agent?: string;
-  custom_data?: Record<string, any>;
-  action_source: string;
-}) {
-  if (!CAPI_TOKEN) {
-    console.error("[CAPI] META_CAPI_ACCESS_TOKEN is not set — event dropped:", payload.event_name);
-    return;
-  }
-
-  const body = {
-    data: [
-      {
-        event_name: payload.event_name,
-        event_time: payload.event_time,
-        event_id: payload.event_id,
-        user_data: {
-          ...payload.user_data,
-          ...(payload.client_ip_address && { client_ip_address: payload.client_ip_address }),
-          ...(payload.client_user_agent && { client_user_agent: payload.client_user_agent }),
-        },
-        custom_data: payload.custom_data,
-        action_source: payload.action_source,
-      },
-    ],
-  };
-
+}): Promise<void> {
   try {
-    const url = `${CAPI_URL}?access_token=${CAPI_TOKEN}`;
-    const res = await fetch(url, {
+    const res = await fetch(CAPI_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
     const result = await res.json();
     if (!res.ok) {
-      console.error(`[CAPI] ${payload.event_name} failed:`, JSON.stringify(result));
+      console.error(`[CAPI] ${payload.event_name} server error:`, result);
     } else {
-      console.log(`[CAPI] ${payload.event_name} sent successfully`);
+      console.log(`[CAPI] ${payload.event_name} sent OK, events_received:`, result.events_received);
     }
-    return result;
   } catch (err: any) {
-    console.error(`[CAPI] ${payload.event_name} request failed:`, err?.message || err);
+    console.error(`[CAPI] ${payload.event_name} fetch failed:`, err?.message || err);
   }
 }
 
-// ─── Server Functions ────────────────────────────────────────────────────────
+// ─── AddToCart ──────────────────────────────────────────────────────────────
 
-export const sendAddToCartEvent = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    try {
-      const schema = z.object({
-        event_id: z.string().optional(),
-        content_ids: z.array(z.string()),
-        content_name: z.string(),
-        content_type: z.string(),
-        value: z.number(),
-        currency: z.literal("GBP"),
-        client_user_agent: z.string().optional(),
-        customer_email: z.string().optional(),
-        customer_phone: z.string().optional(),
-        customer_first_name: z.string().optional(),
-        customer_last_name: z.string().optional(),
-        customer_city: z.string().optional(),
-        customer_postcode: z.string().optional(),
-        external_id: z.string().optional(),
-        fbp: z.string().optional(),
-        fbc: z.string().optional(),
-      });
+export async function sendAddToCartEvent(payload: {
+  event_id?: string;
+  content_ids: string[];
+  content_name: string;
+  content_type: string;
+  value: number;
+  currency: "GBP";
+  client_user_agent?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  customer_first_name?: string;
+  customer_last_name?: string;
+  customer_city?: string;
+  customer_postcode?: string;
+  external_id?: string;
+  fbp?: string;
+  fbc?: string;
+}): Promise<{ success: boolean }> {
+  await postToCAPI({
+    event_name: "AddToCart",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: payload.event_id,
+    user_data: {
+      em: payload.customer_email || "",
+      ph: payload.customer_phone || "",
+      fn: payload.customer_first_name || "",
+      ln: payload.customer_last_name || "",
+      ct: payload.customer_city || "",
+      zp: payload.customer_postcode || "",
+      external_id: payload.external_id || "",
+      fbp: payload.fbp || "",
+      fbc: payload.fbc || "",
+    },
+    custom_data: {
+      content_ids: payload.content_ids,
+      content_name: payload.content_name,
+      content_type: payload.content_type,
+      value: payload.value,
+      currency: payload.currency,
+    },
+    action_source: "website",
+    client_user_agent: payload.client_user_agent,
+  });
+  return { success: true };
+}
 
-      const parsed = schema.parse(data);
+// ─── InitiateCheckout ───────────────────────────────────────────────────────
 
-      const user_data = hashUserData({
-        email: parsed.customer_email,
-        phone: parsed.customer_phone,
-        first_name: parsed.customer_first_name,
-        last_name: parsed.customer_last_name,
-        city: parsed.customer_city,
-        postcode: parsed.customer_postcode,
-        external_id: parsed.external_id,
-        fbp: parsed.fbp,
-        fbc: parsed.fbc,
-      });
+export async function sendInitiateCheckoutEvent(payload: {
+  event_id?: string;
+  value: number;
+  currency: "GBP";
+  num_items: number;
+  client_user_agent?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  customer_first_name?: string;
+  customer_last_name?: string;
+  customer_city?: string;
+  customer_postcode?: string;
+  external_id?: string;
+  fbp?: string;
+  fbc?: string;
+}): Promise<{ success: boolean }> {
+  await postToCAPI({
+    event_name: "InitiateCheckout",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: payload.event_id,
+    user_data: {
+      em: payload.customer_email || "",
+      ph: payload.customer_phone || "",
+      fn: payload.customer_first_name || "",
+      ln: payload.customer_last_name || "",
+      ct: payload.customer_city || "",
+      zp: payload.customer_postcode || "",
+      external_id: payload.external_id || "",
+      fbp: payload.fbp || "",
+      fbc: payload.fbc || "",
+    },
+    custom_data: {
+      value: payload.value,
+      currency: payload.currency,
+      num_items: payload.num_items,
+    },
+    action_source: "website",
+    client_user_agent: payload.client_user_agent,
+  });
+  return { success: true };
+}
 
-      await sendCAPIEvent({
-        event_name: "AddToCart",
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: parsed.event_id,
-        user_data,
-        client_ip_address: getClientIp(),
-        client_user_agent: parsed.client_user_agent,
-        action_source: "website",
-        custom_data: {
-          content_ids: parsed.content_ids,
-          content_name: parsed.content_name,
-          content_type: parsed.content_type,
-          value: parsed.value,
-          currency: parsed.currency,
-        },
-      });
+// ─── Purchase ───────────────────────────────────────────────────────────────
 
-      return { success: true };
-    } catch (err: any) {
-      console.error("sendAddToCartEvent error:", err?.message || err);
-      return { success: false, error: err?.message };
-    }
-  },
-);
+export async function sendPurchaseEvent(payload: {
+  event_id?: string;
+  value: number;
+  currency: "GBP";
+  content_ids: string[];
+  content_type: string;
+  order_id: string;
+  client_user_agent?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  customer_first_name?: string;
+  customer_last_name?: string;
+  customer_city?: string;
+  customer_postcode?: string;
+  external_id?: string;
+  fbp?: string;
+  fbc?: string;
+}): Promise<{ success: boolean }> {
+  await postToCAPI({
+    event_name: "Purchase",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: payload.event_id,
+    user_data: {
+      em: payload.customer_email || "",
+      ph: payload.customer_phone || "",
+      fn: payload.customer_first_name || "",
+      ln: payload.customer_last_name || "",
+      ct: payload.customer_city || "",
+      zp: payload.customer_postcode || "",
+      external_id: payload.external_id || "",
+      fbp: payload.fbp || "",
+      fbc: payload.fbc || "",
+    },
+    custom_data: {
+      content_ids: payload.content_ids,
+      content_type: payload.content_type,
+      value: payload.value,
+      currency: payload.currency,
+      order_id: payload.order_id,
+    },
+    action_source: "website",
+    client_user_agent: payload.client_user_agent,
+  });
+  return { success: true };
+}
 
-export const sendInitiateCheckoutEvent = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    try {
-      const schema = z.object({
-        event_id: z.string().optional(),
-        value: z.number(),
-        currency: z.literal("GBP"),
-        num_items: z.number(),
-        client_user_agent: z.string().optional(),
-        customer_email: z.string().optional(),
-        customer_phone: z.string().optional(),
-        customer_first_name: z.string().optional(),
-        customer_last_name: z.string().optional(),
-        customer_city: z.string().optional(),
-        customer_postcode: z.string().optional(),
-        external_id: z.string().optional(),
-        fbp: z.string().optional(),
-        fbc: z.string().optional(),
-      });
+// ─── PageView ───────────────────────────────────────────────────────────────
 
-      const parsed = schema.parse(data);
-
-      const user_data = hashUserData({
-        email: parsed.customer_email,
-        phone: parsed.customer_phone,
-        first_name: parsed.customer_first_name,
-        last_name: parsed.customer_last_name,
-        city: parsed.customer_city,
-        postcode: parsed.customer_postcode,
-        external_id: parsed.external_id,
-        fbp: parsed.fbp,
-        fbc: parsed.fbc,
-      });
-
-      await sendCAPIEvent({
-        event_name: "InitiateCheckout",
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: parsed.event_id,
-        user_data,
-        client_ip_address: getClientIp(),
-        client_user_agent: parsed.client_user_agent,
-        action_source: "website",
-        custom_data: {
-          value: parsed.value,
-          currency: parsed.currency,
-          num_items: parsed.num_items,
-        },
-      });
-
-      return { success: true };
-    } catch (err: any) {
-      console.error("sendInitiateCheckoutEvent error:", err?.message || err);
-      return { success: false, error: err?.message };
-    }
-  },
-);
-
-export const sendPurchaseEvent = createServerFn({ method: "POST" }).handler(
-  async ({ data }: { data: any }) => {
-    try {
-      const schema = z.object({
-        event_id: z.string().optional(),
-        value: z.number(),
-        currency: z.literal("GBP"),
-        content_ids: z.array(z.string()),
-        content_type: z.string(),
-        order_id: z.string(),
-        client_user_agent: z.string().optional(),
-        customer_email: z.string().optional(),
-        customer_phone: z.string().optional(),
-        customer_first_name: z.string().optional(),
-        customer_last_name: z.string().optional(),
-        customer_city: z.string().optional(),
-        customer_postcode: z.string().optional(),
-        external_id: z.string().optional(),
-        fbp: z.string().optional(),
-        fbc: z.string().optional(),
-      });
-
-      const parsed = schema.parse(data);
-
-      const user_data = hashUserData({
-        email: parsed.customer_email,
-        phone: parsed.customer_phone,
-        first_name: parsed.customer_first_name,
-        last_name: parsed.customer_last_name,
-        city: parsed.customer_city,
-        postcode: parsed.customer_postcode,
-        external_id: parsed.external_id,
-        fbp: parsed.fbp,
-        fbc: parsed.fbc,
-      });
-
-      await sendCAPIEvent({
-        event_name: "Purchase",
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: parsed.event_id,
-        user_data,
-        client_ip_address: getClientIp(),
-        client_user_agent: parsed.client_user_agent,
-        action_source: "website",
-        custom_data: {
-          content_ids: parsed.content_ids,
-          content_type: parsed.content_type,
-          value: parsed.value,
-          currency: parsed.currency,
-          order_id: parsed.order_id,
-        },
-      });
-
-      return { success: true };
-    } catch (err: any) {
-      console.error("sendPurchaseEvent error:", err?.message || err);
-      return { success: false, error: err?.message };
-    }
-  },
-);
+export async function sendPageViewEvent(payload: {
+  event_id?: string;
+  page_url?: string;
+  external_id?: string;
+  fbp?: string;
+  fbc?: string;
+  client_user_agent?: string;
+}): Promise<{ success: boolean }> {
+  await postToCAPI({
+    event_name: "PageView",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: payload.event_id,
+    user_data: {
+      external_id: payload.external_id || "",
+      fbp: payload.fbp || "",
+      fbc: payload.fbc || "",
+    },
+    custom_data: {
+      page_url: payload.page_url || (typeof window !== "undefined" ? window.location.href : ""),
+    },
+    action_source: "website",
+    client_user_agent: payload.client_user_agent,
+  });
+  return { success: true };
+}

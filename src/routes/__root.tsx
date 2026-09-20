@@ -19,6 +19,8 @@ import { Zap } from "lucide-react";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { sendPageViewEvent } from "@/lib/meta-capi";
+import { generateEventId, getClientTrackingData } from "@/lib/meta-pixel";
 
 const CartDrawer = lazy(() =>
   import("@/features/cart/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
@@ -300,6 +302,16 @@ function RootComponent() {
     if (typeof window !== "undefined" && typeof window.fbq === "function") {
       window.fbq("track", "PageView");
     }
+    // Also fire PageView CAPI server event for deduplication
+    const tracking = getClientTrackingData();
+    sendPageViewEvent({
+      event_id: generateEventId(),
+      page_url: window.location.href,
+      external_id: tracking.external_id,
+      fbp: tracking.fbp,
+      fbc: tracking.fbc,
+      client_user_agent: tracking.client_user_agent,
+    });
   }, [location.pathname]);
 
   return (

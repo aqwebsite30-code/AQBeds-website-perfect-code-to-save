@@ -1,7 +1,88 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "./db";
 import { z } from "zod";
-import { sendPurchaseEvent } from "./meta-capi";
+import { createHash } from "crypto";
+
+const PIXEL_ID = process.env.META_PIXEL_ID || "1109711544904339";
+const CAPI_TOKEN = process.env.META_CAPI_ACCESS_TOKEN;
+
+function sha256(value: string): string {
+  return createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
+}
+
+/**
+ * Fire Purchase CAPI directly from server — bypasses createServerFn entirely.
+ * Uses Node.js crypto for hashing and direct fetch to Meta Graph API.
+ */
+async function firePurchaseCAPI(payload: {
+  event_id?: string;
+  value: number;
+  content_ids: string[];
+  order_id: string;
+  customer_email: string;
+  customer_phone: string;
+  customer_first_name: string;
+  customer_last_name: string;
+  customer_city?: string;
+  customer_postcode?: string;
+  external_id?: string;
+  fbp?: string;
+  fbc?: string;
+  client_user_agent?: string;
+}) {
+  if (!CAPI_TOKEN) {
+    console.error("[CAPI] META_CAPI_ACCESS_TOKEN not set — Purchase dropped");
+    return;
+  }
+
+  const user_data: Record<string, string> = {};
+  if (payload.customer_email) user_data.em = sha256(payload.customer_email);
+  if (payload.customer_phone) user_data.ph = sha256(payload.customer_phone);
+  if (payload.customer_first_name) user_data.fn = sha256(payload.customer_first_name);
+  if (payload.customer_last_name) user_data.ln = sha256(payload.customer_last_name);
+  if (payload.customer_city) user_data.ct = sha256(payload.customer_city);
+  if (payload.customer_postcode) user_data.zp = sha256(payload.customer_postcode);
+  if (payload.external_id) user_data.external_id = sha256(payload.external_id);
+  if (payload.fbp) user_data.fbp = payload.fbp;
+  if (payload.fbc) user_data.fbc = payload.fbc;
+  if (payload.client_user_agent) user_data.client_user_agent = payload.client_user_agent;
+
+  const body = {
+    data: [
+      {
+        event_name: "Purchase",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: payload.event_id || undefined,
+        user_data,
+        custom_data: {
+          content_ids: payload.content_ids,
+          content_type: "product",
+          value: payload.value,
+          currency: "GBP",
+          order_id: payload.order_id,
+        },
+        action_source: "website",
+      },
+    ],
+  };
+
+  try {
+    const url = `https://graph.facebook.com/v21.0/${PIXEL_ID}/events?access_token=${CAPI_TOKEN}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      console.error("[CAPI] Purchase FAILED:", JSON.stringify(result));
+    } else {
+      console.log("[CAPI] Purchase sent OK, events_received:", result.events_received);
+    }
+  } catch (err: any) {
+    console.error("[CAPI] Purchase fetch error:", err?.message || err);
+  }
+}
 
 export const saveOrder = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
@@ -64,26 +145,21 @@ export const saveOrder = createServerFn({ method: "POST" }).handler(
 
       const postcodeMatch = parsed.customerAddress.match(/([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})/i);
 
-      // Fire Purchase CAPI event with full user data for maximum EMQ
-      sendPurchaseEvent({
-        data: {
-          event_id: parsed.event_id || undefined,
-          value: parsed.total,
-          currency: "GBP",
-          content_ids: orderItems.map((i: any) => i.id).filter(Boolean),
-          content_type: "product",
-          order_id: order.id,
-          client_user_agent: parsed.client_user_agent || undefined,
-          customer_email: parsed.customerEmail,
-          customer_phone: parsed.customerPhone,
-          customer_first_name: firstName,
-          customer_last_name: lastName,
-          customer_city: city || undefined,
-          customer_postcode: postcodeMatch?.[1] || undefined,
-          external_id: parsed.external_id || undefined,
-          fbp: parsed.fbp || undefined,
-          fbc: parsed.fbc || undefined,
-        } as any,
+      firePurchaseCAPI({
+        event_id: parsed.event_id || undefined,
+        value: parsed.total,
+        content_ids: orderItems.map((i: any) => i.id).filter(Boolean),
+        order_id: order.id,
+        customer_email: parsed.customerEmail,
+        customer_phone: parsed.customerPhone,
+        customer_first_name: firstName,
+        customer_last_name: lastName,
+        customer_city: city || undefined,
+        customer_postcode: postcodeMatch?.[1] || undefined,
+        external_id: parsed.external_id || undefined,
+        fbp: parsed.fbp || undefined,
+        fbc: parsed.fbc || undefined,
+        client_user_agent: parsed.client_user_agent || undefined,
       }).catch(() => {});
 
       return { success: true, orderId: order.id };
