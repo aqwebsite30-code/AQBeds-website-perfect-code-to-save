@@ -57,6 +57,11 @@ export const saveOrder = createServerFn({ method: "POST" }).handler(
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
 
+      // Extract city from address: "123 Street, Leeds, LS1 1AA, UK" → "Leeds"
+      const addressParts = parsed.customerAddress.split(",").map((s: string) => s.trim());
+      // City is typically the second part (after street, before postcode)
+      const city = addressParts.length >= 3 ? addressParts[1] : addressParts[1] || "";
+
       const postcodeMatch = parsed.customerAddress.match(/([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})/i);
 
       // Fire Purchase CAPI event with full user data for maximum EMQ
@@ -73,6 +78,7 @@ export const saveOrder = createServerFn({ method: "POST" }).handler(
           customer_phone: parsed.customerPhone,
           customer_first_name: firstName,
           customer_last_name: lastName,
+          customer_city: city || undefined,
           customer_postcode: postcodeMatch?.[1] || undefined,
           external_id: parsed.external_id || undefined,
           fbp: parsed.fbp || undefined,

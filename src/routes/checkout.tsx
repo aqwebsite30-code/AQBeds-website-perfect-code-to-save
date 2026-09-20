@@ -83,6 +83,26 @@ function CheckoutPage() {
       const purchaseEventId = generateEventId();
       const trackingData = getClientTrackingData();
 
+      // Fire InitiateCheckout CAPI with full customer PII (re-fire on submit for better EMQ)
+      const checkoutPayload = {
+        data: {
+          event_id: checkoutEventId.current || undefined,
+          value: total(),
+          currency: "GBP" as const,
+          num_items: items.reduce((s, i) => s + i.qty, 0),
+          client_user_agent: navigator.userAgent,
+          customer_email: customer.email,
+          customer_phone: customer.phone,
+          customer_first_name: customer.name.split(/\s+/)[0] || "",
+          customer_last_name: customer.name.split(/\s+/).slice(1).join(" ") || "",
+          customer_city: customer.city,
+          customer_postcode: customer.postcode,
+          ...trackingData,
+        } as any,
+      };
+      // @ts-ignore
+      sendInitiateCheckoutEvent(checkoutPayload).catch(() => {});
+
       // 1. Save order to database (get order number for confirmation + WhatsApp)
       const trackingToken = getTrackingToken();
       // @ts-ignore

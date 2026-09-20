@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import { trackPixelWithId, getClientTrackingData } from "@/lib/meta-pixel";
+import { trackPixel, trackPixelWithId, getClientTrackingData } from "@/lib/meta-pixel";
 import { sendAddToCartEvent } from "@/lib/meta-capi";
 
 import { getProduct, PRODUCTS, DISCOUNT_POSTCODES } from "@/features/products/data/products";
