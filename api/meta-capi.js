@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     return jsonResponse(res, 400, { error: "Invalid JSON body" });
   }
 
-  const { event_name, event_time, event_id, user_data, custom_data, action_source, client_ip_address, client_user_agent } = parsed;
+  const { event_name, event_time, event_id, user_data, custom_data, action_source, client_ip_address, client_user_agent, test_event_code } = parsed;
 
   if (!event_name) {
     return jsonResponse(res, 400, { error: "event_name is required" });
@@ -75,6 +75,10 @@ export default async function handler(req, res) {
       },
     ],
   };
+
+  if (test_event_code) {
+    body.test_event_code = test_event_code;
+  }
 
   try {
     const url = `https://graph.facebook.com/v21.0/${PIXEL_ID}/events?access_token=${CAPI_TOKEN}`;

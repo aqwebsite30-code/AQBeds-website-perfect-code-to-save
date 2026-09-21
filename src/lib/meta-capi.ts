@@ -23,12 +23,26 @@ async function postToCAPI(payload: {
   action_source?: string;
   client_ip_address?: string;
   client_user_agent?: string;
+  test_event_code?: string;
 }): Promise<void> {
   try {
+    const body: Record<string, any> = {
+      event_name: payload.event_name,
+      event_time: payload.event_time,
+      event_id: payload.event_id,
+      user_data: payload.user_data,
+      custom_data: payload.custom_data,
+      action_source: payload.action_source,
+      client_ip_address: payload.client_ip_address,
+      client_user_agent: payload.client_user_agent,
+    };
+    if (payload.test_event_code) {
+      body.test_event_code = payload.test_event_code;
+    }
     const res = await fetch(CAPI_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     const result = await res.json();
     if (!res.ok) {
@@ -39,6 +53,56 @@ async function postToCAPI(payload: {
   } catch (err: any) {
     console.error(`[CAPI] ${payload.event_name} fetch failed:`, err?.message || err);
   }
+}
+
+// ─── ViewContent ─────────────────────────────────────────────────────────────
+
+export async function sendViewContentEvent(payload: {
+  event_id?: string;
+  content_ids: string[];
+  content_name: string;
+  content_type: string;
+  value: number;
+  currency: "GBP";
+  client_user_agent?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  customer_first_name?: string;
+  customer_last_name?: string;
+  customer_city?: string;
+  customer_postcode?: string;
+  external_id?: string;
+  fbp?: string;
+  fbc?: string;
+  test_event_code?: string;
+}): Promise<{ success: boolean }> {
+  await postToCAPI({
+    event_name: "ViewContent",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: payload.event_id,
+    user_data: {
+      em: payload.customer_email || "",
+      ph: payload.customer_phone || "",
+      fn: payload.customer_first_name || "",
+      ln: payload.customer_last_name || "",
+      ct: payload.customer_city || "",
+      zp: payload.customer_postcode || "",
+      external_id: payload.external_id || "",
+      fbp: payload.fbp || "",
+      fbc: payload.fbc || "",
+    },
+    custom_data: {
+      content_ids: payload.content_ids,
+      content_name: payload.content_name,
+      content_type: payload.content_type,
+      value: payload.value,
+      currency: payload.currency,
+    },
+    action_source: "website",
+    client_user_agent: payload.client_user_agent,
+    test_event_code: payload.test_event_code,
+  });
+  return { success: true };
 }
 
 // ─── AddToCart ──────────────────────────────────────────────────────────────
@@ -60,6 +124,7 @@ export async function sendAddToCartEvent(payload: {
   external_id?: string;
   fbp?: string;
   fbc?: string;
+  test_event_code?: string;
 }): Promise<{ success: boolean }> {
   await postToCAPI({
     event_name: "AddToCart",
@@ -85,6 +150,7 @@ export async function sendAddToCartEvent(payload: {
     },
     action_source: "website",
     client_user_agent: payload.client_user_agent,
+    test_event_code: payload.test_event_code,
   });
   return { success: true };
 }
@@ -106,6 +172,7 @@ export async function sendInitiateCheckoutEvent(payload: {
   external_id?: string;
   fbp?: string;
   fbc?: string;
+  test_event_code?: string;
 }): Promise<{ success: boolean }> {
   await postToCAPI({
     event_name: "InitiateCheckout",
@@ -129,6 +196,7 @@ export async function sendInitiateCheckoutEvent(payload: {
     },
     action_source: "website",
     client_user_agent: payload.client_user_agent,
+    test_event_code: payload.test_event_code,
   });
   return { success: true };
 }
@@ -152,6 +220,7 @@ export async function sendPurchaseEvent(payload: {
   external_id?: string;
   fbp?: string;
   fbc?: string;
+  test_event_code?: string;
 }): Promise<{ success: boolean }> {
   await postToCAPI({
     event_name: "Purchase",
@@ -177,6 +246,7 @@ export async function sendPurchaseEvent(payload: {
     },
     action_source: "website",
     client_user_agent: payload.client_user_agent,
+    test_event_code: payload.test_event_code,
   });
   return { success: true };
 }
@@ -190,6 +260,7 @@ export async function sendPageViewEvent(payload: {
   fbp?: string;
   fbc?: string;
   client_user_agent?: string;
+  test_event_code?: string;
 }): Promise<{ success: boolean }> {
   await postToCAPI({
     event_name: "PageView",
@@ -205,6 +276,7 @@ export async function sendPageViewEvent(payload: {
     },
     action_source: "website",
     client_user_agent: payload.client_user_agent,
+    test_event_code: payload.test_event_code,
   });
   return { success: true };
 }
