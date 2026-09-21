@@ -33,16 +33,13 @@ function CheckoutPage() {
       });
       checkoutEventId.current = event_id;
       const trackingData = getClientTrackingData();
-      // @ts-ignore
       sendInitiateCheckoutEvent({
-        data: {
-          event_id,
-          value: total(),
-          currency: "GBP",
-          num_items: items.reduce((s, i) => s + i.qty, 0),
-          client_user_agent: navigator.userAgent,
-          ...trackingData,
-        } as any,
+        event_id,
+        value: total(),
+        currency: "GBP",
+        num_items: items.reduce((s, i) => s + i.qty, 0),
+        client_user_agent: navigator.userAgent,
+        ...trackingData,
       }).catch(() => {});
     }
   }, []);
@@ -85,22 +82,19 @@ function CheckoutPage() {
 
       // Fire InitiateCheckout CAPI with full customer PII (re-fire on submit for better EMQ)
       const checkoutPayload = {
-        data: {
-          event_id: checkoutEventId.current || undefined,
-          value: total(),
-          currency: "GBP" as const,
-          num_items: items.reduce((s, i) => s + i.qty, 0),
-          client_user_agent: navigator.userAgent,
-          customer_email: customer.email,
-          customer_phone: customer.phone,
-          customer_first_name: customer.name.split(/\s+/)[0] || "",
-          customer_last_name: customer.name.split(/\s+/).slice(1).join(" ") || "",
-          customer_city: customer.city,
-          customer_postcode: customer.postcode,
-          ...trackingData,
-        } as any,
-      };
-      // @ts-ignore
+        event_id: checkoutEventId.current || undefined,
+        value: total(),
+        currency: "GBP" as const,
+        num_items: items.reduce((s, i) => s + i.qty, 0),
+        client_user_agent: navigator.userAgent,
+        customer_email: customer.email,
+        customer_phone: customer.phone,
+        customer_first_name: customer.name.split(/\s+/)[0] || "",
+        customer_last_name: customer.name.split(/\s+/).slice(1).join(" ") || "",
+        customer_city: customer.city,
+        customer_postcode: customer.postcode,
+        ...trackingData,
+      } as any;
       sendInitiateCheckoutEvent(checkoutPayload).catch(() => {});
 
       // 1. Save order to database (get order number for confirmation + WhatsApp)

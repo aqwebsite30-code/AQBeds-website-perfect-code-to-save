@@ -10,9 +10,25 @@
 
 const CAPI_ENDPOINT = "/api/meta-capi";
 
+let cachedClientIp = "";
+
+async function getClientIp(): Promise<string> {
+  if (cachedClientIp) return cachedClientIp;
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+    if (data.ip) {
+      cachedClientIp = data.ip;
+      return data.ip;
+    }
+  } catch {}
+  return "";
+}
+
 /**
  * Internal helper: POST event data to the server-side CAPI endpoint.
- * Never crashes — logs errors to console.
+ * Uses keepalive: true so browser navigation (page unload) does not abort
+ * in-flight CAPI requests (AddToCart, InitiateCheckout, etc.).
  */
 async function postToCAPI(payload: {
   event_name: string;
@@ -26,6 +42,9 @@ async function postToCAPI(payload: {
   test_event_code?: string;
 }): Promise<void> {
   try {
+    const userAgent = payload.client_user_agent || (typeof navigator !== "undefined" ? navigator.userAgent : "");
+    const ip = payload.client_ip_address || await getClientIp();
+
     const body: Record<string, any> = {
       event_name: payload.event_name,
       event_time: payload.event_time,
@@ -33,16 +52,19 @@ async function postToCAPI(payload: {
       user_data: payload.user_data,
       custom_data: payload.custom_data,
       action_source: payload.action_source,
-      client_ip_address: payload.client_ip_address,
-      client_user_agent: payload.client_user_agent,
+      client_ip_address: ip,
+      client_user_agent: userAgent,
     };
     if (payload.test_event_code) {
       body.test_event_code = payload.test_event_code;
     }
+
+    // keepalive: true ensures the request completes even if the user navigates away
     const res = await fetch(CAPI_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      keepalive: true,
     });
     const result = await res.json();
     if (!res.ok) {

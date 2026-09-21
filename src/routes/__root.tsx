@@ -20,7 +20,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { sendPageViewEvent } from "@/lib/meta-capi";
-import { trackPixelWithId, generateEventId, getClientTrackingData } from "@/lib/meta-pixel";
+import { trackPixelWithId, getClientTrackingData } from "@/lib/meta-pixel";
 
 const CartDrawer = lazy(() =>
   import("@/features/cart/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),

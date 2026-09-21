@@ -1,7 +1,7 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
-import { trackPixel, trackPixelWithId, getClientTrackingData } from "@/lib/meta-pixel";
-import { sendAddToCartEvent } from "@/lib/meta-capi";
+import { trackPixelWithId, getClientTrackingData } from "@/lib/meta-pixel";
+import { sendAddToCartEvent, sendViewContentEvent } from "@/lib/meta-capi";
 
 import { getProduct, PRODUCTS, DISCOUNT_POSTCODES } from "@/features/products/data/products";
 import { getDbProductBySlug } from "@/lib/products";
@@ -273,13 +273,24 @@ function ProductPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    trackPixel("ViewContent", {
+    const event_id = trackPixelWithId("ViewContent", {
       content_name: product.name,
       content_ids: [product.id],
       content_type: "product",
       value: product.basePrice,
       currency: "GBP",
     });
+    const trackingData = getClientTrackingData();
+    sendViewContentEvent({
+      event_id,
+      content_ids: [product.id],
+      content_name: product.name,
+      content_type: "product",
+      value: product.basePrice,
+      currency: "GBP",
+      client_user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+      ...trackingData,
+    }).catch(() => {});
   }, [product.id]);
 
   const isSofa = product.category === "sofas";
@@ -526,18 +537,15 @@ function ProductPage() {
       currency: "GBP",
     });
     const trackingData = getClientTrackingData();
-    // @ts-ignore
     sendAddToCartEvent({
-      data: {
-        event_id,
-        content_ids: [product.id],
-        content_name: product.name,
-        content_type: "product",
-        value: unitPrice,
-        currency: "GBP",
-        client_user_agent: navigator.userAgent,
-        ...trackingData,
-      },
+      event_id,
+      content_ids: [product.id],
+      content_name: product.name,
+      content_type: "product",
+      value: unitPrice,
+      currency: "GBP",
+      client_user_agent: navigator.userAgent,
+      ...trackingData,
     }).catch(() => {});
     setCartOpen(true);
   };
