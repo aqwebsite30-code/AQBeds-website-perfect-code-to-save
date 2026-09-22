@@ -56,6 +56,7 @@ export default async function handler(req, res) {
       "availability",
       "condition",
       "price",
+      "sale_price",
       "link",
       "image_link",
       "additional_image_link",
@@ -71,7 +72,12 @@ export default async function handler(req, res) {
       const mainImage = images[0] || "";
       const additionalImages = images.slice(1, 11).join(",");
 
-      const price = p.salePrice !== null && p.salePrice !== undefined ? p.salePrice : (p.price ?? p.basePrice);
+      // DB product: { price, salePrice } — static fallback: { basePrice, originalPrice }
+      const isDb = typeof p.price === "number";
+      const regular = isDb ? p.price : (p.originalPrice ?? p.basePrice);
+      const sale = isDb ? (p.salePrice ?? p.price) : p.basePrice;
+      const priceCol = formatPrice(regular);
+      const salePriceCol = sale < regular ? formatPrice(sale) : "";
       const availability = (p.stock ?? 0) > 0 ? "in stock" : "out of stock";
       const slug = p.slug || p.id;
 
@@ -81,7 +87,8 @@ export default async function handler(req, res) {
         escapeCsv(p.description || ""),
         escapeCsv(availability),
         escapeCsv("new"),
-        escapeCsv(formatPrice(price)),
+        escapeCsv(priceCol),
+        escapeCsv(salePriceCol),
         escapeCsv(`${BASE_URL}/product/${slug}`),
         escapeCsv(mainImage),
         escapeCsv(additionalImages),

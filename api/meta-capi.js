@@ -54,6 +54,8 @@ export default async function handler(req, res) {
     if (user_data.fn) hashedUserData.fn = sha256(user_data.fn);
     if (user_data.ln) hashedUserData.ln = sha256(user_data.ln);
     if (user_data.ct) hashedUserData.ct = sha256(user_data.ct);
+    if (user_data.st) hashedUserData.st = sha256(user_data.st);
+    if (user_data.country) hashedUserData.country = sha256(user_data.country);
     if (user_data.zp) hashedUserData.zp = sha256(user_data.zp);
     if (user_data.external_id) hashedUserData.external_id = sha256(user_data.external_id);
     if (user_data.fbp) hashedUserData.fbp = user_data.fbp;

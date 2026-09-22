@@ -93,6 +93,7 @@ function CheckoutPage() {
         customer_last_name: customer.name.split(/\s+/).slice(1).join(" ") || "",
         customer_city: customer.city,
         customer_postcode: customer.postcode,
+        customer_country: (formData.get("country") as string) || "United Kingdom",
         ...trackingData,
       } as any;
       sendInitiateCheckoutEvent(checkoutPayload).catch(() => {});

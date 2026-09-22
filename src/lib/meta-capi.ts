@@ -92,6 +92,8 @@ export async function sendViewContentEvent(payload: {
   customer_first_name?: string;
   customer_last_name?: string;
   customer_city?: string;
+  customer_state?: string;
+  customer_country?: string;
   customer_postcode?: string;
   external_id?: string;
   fbp?: string;
@@ -108,6 +110,8 @@ export async function sendViewContentEvent(payload: {
       fn: payload.customer_first_name || "",
       ln: payload.customer_last_name || "",
       ct: payload.customer_city || "",
+      st: payload.customer_state || "",
+      country: payload.customer_country || "",
       zp: payload.customer_postcode || "",
       external_id: payload.external_id || "",
       fbp: payload.fbp || "",
@@ -142,6 +146,8 @@ export async function sendAddToCartEvent(payload: {
   customer_first_name?: string;
   customer_last_name?: string;
   customer_city?: string;
+  customer_state?: string;
+  customer_country?: string;
   customer_postcode?: string;
   external_id?: string;
   fbp?: string;
@@ -158,6 +164,8 @@ export async function sendAddToCartEvent(payload: {
       fn: payload.customer_first_name || "",
       ln: payload.customer_last_name || "",
       ct: payload.customer_city || "",
+      st: payload.customer_state || "",
+      country: payload.customer_country || "",
       zp: payload.customer_postcode || "",
       external_id: payload.external_id || "",
       fbp: payload.fbp || "",
@@ -190,6 +198,8 @@ export async function sendInitiateCheckoutEvent(payload: {
   customer_first_name?: string;
   customer_last_name?: string;
   customer_city?: string;
+  customer_state?: string;
+  customer_country?: string;
   customer_postcode?: string;
   external_id?: string;
   fbp?: string;
@@ -206,6 +216,8 @@ export async function sendInitiateCheckoutEvent(payload: {
       fn: payload.customer_first_name || "",
       ln: payload.customer_last_name || "",
       ct: payload.customer_city || "",
+      st: payload.customer_state || "",
+      country: payload.customer_country || "",
       zp: payload.customer_postcode || "",
       external_id: payload.external_id || "",
       fbp: payload.fbp || "",
