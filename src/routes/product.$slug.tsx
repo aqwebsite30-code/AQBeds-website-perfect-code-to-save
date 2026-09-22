@@ -334,15 +334,14 @@ function ProductPage() {
       img.src = src;
     });
 
-    if (isSofa) {
-      Object.values(SOFA_PALETTES)
-        .flat()
-        .forEach((c) => {
-          if (c.image) {
-            const img = new Image();
-            img.src = c.image;
-          }
-        });
+    if (isSofa && fabric && SOFA_PALETTES[fabric.name]) {
+      // Only preload colors for the currently selected fabric, not all 65+
+      SOFA_PALETTES[fabric.name].forEach((c) => {
+        if (c.image) {
+          const img = new Image();
+          img.src = c.image;
+        }
+      });
     }
 
     let ticking = false;
@@ -671,6 +670,7 @@ function ProductPage() {
                               alt={`${c.name} — ${fabric?.name} — AQ Beds`}
                               className="h-full w-full object-cover"
                               decoding="async"
+                              loading="lazy"
                             />
                           ) : (
                             <div
