@@ -189,6 +189,7 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1109711544904339', { automaticConfiguration: false });
+fbq('set', 'autoConfig', false, '1109711544904339');
 `,
           }}
         />
@@ -297,11 +298,11 @@ function RootComponent() {
   }, []);
 
   // Single client-side PageView per route load (mount + pathname change only).
-  // automaticConfiguration:false on fbq('init') stops Meta auto-firing a
-  // secondary PageView with an ob3_plugin-set_ ID. This effect is the ONE
-  // browser PageView; it always passes eventID so CAPI dedup is exact.
+  // autoConfig disabled on fbq init + fbq('set','autoConfig',false,...) stops
+  // Meta SDK overriding the ID with ob3_plugin-set_. This effect is the ONE
+  // browser PageView; sharedEventId is string-identical for browser + CAPI.
   useEffect(() => {
-    const sharedEventId = generateEventId();
+    const sharedEventId = String(generateEventId());
     if (typeof window !== "undefined" && typeof window.fbq === "function") {
       window.fbq("track", "PageView", {}, { eventID: sharedEventId });
     }
