@@ -192,6 +192,8 @@ export async function sendInitiateCheckoutEvent(payload: {
   value: number;
   currency: "GBP";
   num_items: number;
+  content_ids: string[];
+  content_type?: string;
   client_user_agent?: string;
   customer_email?: string;
   customer_phone?: string;
@@ -224,6 +226,8 @@ export async function sendInitiateCheckoutEvent(payload: {
       fbc: payload.fbc || "",
     },
     custom_data: {
+      content_ids: payload.content_ids,
+      content_type: payload.content_type || "product",
       value: payload.value,
       currency: payload.currency,
       num_items: payload.num_items,

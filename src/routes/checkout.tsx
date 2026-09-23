@@ -26,7 +26,10 @@ function CheckoutPage() {
 
   useEffect(() => {
     if (items.length > 0) {
+      const contentIds = items.map((i) => String(i.productId)).filter(Boolean);
       const event_id = trackPixelWithId("InitiateCheckout", {
+        content_ids: contentIds,
+        content_type: "product",
         value: total(),
         currency: "GBP",
         num_items: items.reduce((s, i) => s + i.qty, 0),
@@ -35,6 +38,8 @@ function CheckoutPage() {
       const trackingData = getClientTrackingData();
       sendInitiateCheckoutEvent({
         event_id,
+        content_ids: contentIds,
+        content_type: "product",
         value: total(),
         currency: "GBP",
         num_items: items.reduce((s, i) => s + i.qty, 0),
@@ -81,8 +86,11 @@ function CheckoutPage() {
       const trackingData = getClientTrackingData();
 
       // Fire InitiateCheckout CAPI with full customer PII (re-fire on submit for better EMQ)
+      const checkoutContentIds = items.map((i) => String(i.productId)).filter(Boolean);
       const checkoutPayload = {
         event_id: checkoutEventId.current || undefined,
+        content_ids: checkoutContentIds,
+        content_type: "product",
         value: total(),
         currency: "GBP" as const,
         num_items: items.reduce((s, i) => s + i.qty, 0),
@@ -174,6 +182,7 @@ function CheckoutPage() {
           window.fbq("track", "Purchase", {
             value: total(),
             currency: "GBP",
+            content_ids: items.map((i) => String(i.productId)).filter(Boolean),
             content_type: "product",
             order_id: orderId,
           }, { eventID: purchaseEventId });

@@ -188,7 +188,8 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1109711544904339', { automaticConfiguration: false });
+fbq('set', 'autoConfig', false, '1109711544904339');
+fbq('init', '1109711544904339', { automaticConfiguration: false, automaticConfig: false });
 fbq('set', 'autoConfig', false, '1109711544904339');
 `,
           }}
@@ -303,9 +304,13 @@ function RootComponent() {
   // browser PageView; sharedEventId is string-identical for browser + CAPI.
   useEffect(() => {
     const sharedEventId = String(generateEventId());
-    if (typeof window !== "undefined" && typeof window.fbq === "function") {
-      window.fbq("track", "PageView", {}, { eventID: sharedEventId });
-    }
+    const fireBrowserPageView = () => {
+      if (typeof window !== "undefined" && typeof window.fbq === "function") {
+        window.fbq("set", "autoConfig", false, "1109711544904339");
+        window.fbq("track", "PageView", {}, { eventID: sharedEventId });
+      }
+    };
+    fireBrowserPageView();
     const tracking = getClientTrackingData();
     sendPageViewEvent({
       event_id: sharedEventId,
