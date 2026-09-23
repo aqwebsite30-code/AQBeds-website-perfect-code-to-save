@@ -67,7 +67,8 @@ export function trackPixel(event: string, params?: Record<string, any>) {
 export function trackPixelWithId(event: string, params?: Record<string, any>): string {
   const event_id = generateEventId();
   if (typeof window === "undefined" || typeof window.fbq !== "function") return event_id;
-  window.fbq("track", event, params, { eventID: event_id });
+  // Always pass an object (not undefined) so fbq reliably reads { eventID }.
+  window.fbq("track", event, params ?? {}, { eventID: event_id });
   return event_id;
 }
 

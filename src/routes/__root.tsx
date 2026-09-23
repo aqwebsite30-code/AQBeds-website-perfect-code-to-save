@@ -20,7 +20,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { sendPageViewEvent } from "@/lib/meta-capi";
-import { trackPixelWithId, getClientTrackingData } from "@/lib/meta-pixel";
+import { generateEventId, getClientTrackingData } from "@/lib/meta-pixel";
 
 const CartDrawer = lazy(() =>
   import("@/features/cart/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
@@ -296,12 +296,16 @@ function RootComponent() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Re-fire Meta Pixel PageView on every client-side route transition
+  // Fire Meta Pixel PageView with a shared event_id on mount and every route
+  // transition. The same event_id is sent to CAPI so browser + server dedup 100%.
   useEffect(() => {
-    const event_id = trackPixelWithId("PageView");
+    const sharedEventId = generateEventId();
+    if (typeof window !== "undefined" && typeof window.fbq === "function") {
+      window.fbq("track", "PageView", {}, { eventID: sharedEventId });
+    }
     const tracking = getClientTrackingData();
     sendPageViewEvent({
-      event_id,
+      event_id: sharedEventId,
       page_url: window.location.href,
       external_id: tracking.external_id,
       fbp: tracking.fbp,
