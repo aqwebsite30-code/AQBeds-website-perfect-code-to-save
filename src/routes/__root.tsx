@@ -189,8 +189,12 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('set', 'autoConfig', false, '1109711544904339');
+fbq.disablePushState = true;
+fbq.allowDuplicatePageViews = true;
 fbq('init', '1109711544904339', { automaticConfiguration: false, automaticConfig: false });
 fbq('set', 'autoConfig', false, '1109711544904339');
+fbq.disablePushState = true;
+fbq.allowDuplicatePageViews = true;
 `,
           }}
         />
@@ -258,6 +262,10 @@ const trackVisitSimple = createServerFn({ method: "POST" }).handler(
   },
 );
 
+// Module-level guard: exactly ONE PageView per route path per document
+// session (survives StrictMode double-mount, resets on full page reload).
+let lastPageViewPath: string | null = null;
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useRouter().state.location;
@@ -299,13 +307,17 @@ function RootComponent() {
   }, []);
 
   // Single client-side PageView per route load (mount + pathname change only).
-  // autoConfig disabled on fbq init + fbq('set','autoConfig',false,...) stops
-  // Meta SDK overriding the ID with ob3_plugin-set_. This effect is the ONE
-  // browser PageView; sharedEventId is string-identical for browser + CAPI.
+  // fbq.disablePushState stops Meta history hooks from auto-firing
+  // PageView with ob3_plugin-set_ on SPA navigations. This effect is the
+  // ONE browser PageView; sharedEventId is string-identical for browser + CAPI.
   useEffect(() => {
+    if (lastPageViewPath === location.pathname) return;
+    lastPageViewPath = location.pathname;
     const sharedEventId = String(generateEventId());
     const fireBrowserPageView = () => {
       if (typeof window !== "undefined" && typeof window.fbq === "function") {
+        window.fbq.disablePushState = true;
+        window.fbq.allowDuplicatePageViews = true;
         window.fbq("set", "autoConfig", false, "1109711544904339");
         window.fbq("track", "PageView", {}, { eventID: sharedEventId });
       }
