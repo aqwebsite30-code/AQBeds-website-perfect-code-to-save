@@ -188,7 +188,7 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1109711544904339');
+fbq('init', '1109711544904339', { automaticConfiguration: false });
 `,
           }}
         />
@@ -296,8 +296,10 @@ function RootComponent() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Fire Meta Pixel PageView with a shared event_id on mount and every route
-  // transition. The same event_id is sent to CAPI so browser + server dedup 100%.
+  // Single client-side PageView per route load (mount + pathname change only).
+  // automaticConfiguration:false on fbq('init') stops Meta auto-firing a
+  // secondary PageView with an ob3_plugin-set_ ID. This effect is the ONE
+  // browser PageView; it always passes eventID so CAPI dedup is exact.
   useEffect(() => {
     const sharedEventId = generateEventId();
     if (typeof window !== "undefined" && typeof window.fbq === "function") {
