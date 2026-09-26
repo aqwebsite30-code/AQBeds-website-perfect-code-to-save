@@ -8,16 +8,32 @@ export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
       { title: "Search — AQ Beds" },
-      { name: "description", content: "Search for luxury beds, ottomans, divans, sofas and bedroom furniture at AQ Beds." },
+      {
+        name: "description",
+        content:
+          "Search for luxury beds, ottomans, divans, sofas and bedroom furniture at AQ Beds.",
+      },
       { property: "og:title", content: "Search — AQ Beds" },
-      { property: "og:description", content: "Search for luxury beds, ottomans, divans, sofas and bedroom furniture at AQ Beds." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:description",
+        content:
+          "Search for luxury beds, ottomans, divans, sofas and bedroom furniture at AQ Beds.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/search" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Search — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
+      { name: "robots", content: "noindex, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/search" }],
   }),
   component: SearchPage,
 });

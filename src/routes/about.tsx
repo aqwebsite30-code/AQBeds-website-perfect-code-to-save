@@ -9,14 +9,25 @@ export const Route = createFileRoute("/about")({
         content: "AQ Beds crafts premium beds with timeless design and lasting comfort.",
       },
       { property: "og:title", content: "About — AQ Beds" },
-      { property: "og:description", content: "AQ Beds crafts premium beds with timeless design and lasting comfort. Handcrafted in the UK." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:description",
+        content:
+          "AQ Beds crafts premium beds with timeless design and lasting comfort. Handcrafted in the UK.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/about" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "About — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/about" }],
   }),
   component: About,
 });

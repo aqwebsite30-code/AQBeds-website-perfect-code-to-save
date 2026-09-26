@@ -63,7 +63,7 @@ await page.evaluate(() => {
     window.dispatchEvent(new PopStateEvent("popstate"));
   }
 });
-await page.waitForTimeout(4000);
+await page.waitForTimeout(6000);
 
 // Product page ViewContent via real link if present
 await page.evaluate(() => {
@@ -74,7 +74,7 @@ await page.evaluate(() => {
     window.dispatchEvent(new PopStateEvent("popstate"));
   }
 });
-await page.waitForTimeout(4000);
+await page.waitForTimeout(8000);
 
 console.log("PATH:", await page.evaluate(() => window.location.pathname));
 

@@ -30,15 +30,6 @@ export function LiveChatWidget() {
   const [sessionId] = useState(getSessionId);
   const [unread, setUnread] = useState(0);
 
-  if (typeof window !== "undefined") {
-    const now = performance.now();
-    console.log(`[AQ-DEBUG] LiveChatWidget Rendered at: ${now.toFixed(2)}ms`);
-  }
-
-  useEffect(() => {
-    const now = performance.now();
-    console.log(`[AQ-DEBUG] LiveChatWidget Mounted at: ${now.toFixed(2)}ms`);
-  }, []);
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

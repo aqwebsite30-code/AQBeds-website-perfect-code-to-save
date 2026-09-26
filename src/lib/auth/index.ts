@@ -39,6 +39,18 @@ export async function verifyAuth(token?: string) {
   }
 }
 
+// Admin token lives in localStorage on the client. Server renderers have no
+// access to it, so loaders/read fns must always be re-fetched from the client.
+export function adminToken(): string {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem("admin_token") || "";
+}
+
+export const unauthorized = {
+  success: false as const,
+  error: "Unauthorized. Please sign in again.",
+};
+
 // ─── 1. LOGIN ─────────────────────────────────────────────────────────────────
 export const loginAdmin = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {

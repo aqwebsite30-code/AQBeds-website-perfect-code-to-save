@@ -20,42 +20,49 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { verifyAuth, adminToken, unauthorized } from "@/lib/auth";
 
 import { z } from "zod";
 
-export const getOrders = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    const orders = await db.order.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: { salesperson: true },
-    });
-    const tokens = orders.filter((o) => o.trackingToken).map((o) => o.trackingToken as string);
-    const visits =
-      tokens.length > 0
-        ? await db.siteVisit.findMany({
-            where: { token: { in: tokens } },
-            orderBy: { createdAt: "desc" },
-          })
-        : [];
-    const visitMap: Record<string, any> = {};
-    for (const v of visits) {
-      if (!visitMap[v.token]) visitMap[v.token] = v;
+export const getOrders = createServerFn({ method: "GET" }).handler(
+  async (opts?: { data?: { token?: string } }) => {
+    if (!(await verifyAuth(opts?.data?.token))) return [];
+    try {
+      const orders = await db.order.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: { salesperson: true },
+      });
+      const tokens = orders.filter((o) => o.trackingToken).map((o) => o.trackingToken as string);
+      const visits =
+        tokens.length > 0
+          ? await db.siteVisit.findMany({
+              where: { token: { in: tokens } },
+              orderBy: { createdAt: "desc" },
+            })
+          : [];
+      const visitMap: Record<string, any> = {};
+      for (const v of visits) {
+        if (!visitMap[v.token]) visitMap[v.token] = v;
+      }
+      return orders.map((o) => ({
+        ...o,
+        visit: o.trackingToken ? (visitMap[o.trackingToken] ?? null) : null,
+      }));
+    } catch {
+      return [];
     }
-    return orders.map((o) => ({
-      ...o,
-      visit: o.trackingToken ? (visitMap[o.trackingToken] ?? null) : null,
-    }));
-  } catch {
-    return [];
-  }
-});
+  },
+);
 
 export const updateOrderStatus = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
-    const { id, status } = z.object({ id: z.string(), status: z.string() }).parse(data);
+    if (!(await verifyAuth(data?.token))) return unauthorized;
+    const { id, status } = z
+      .object({ id: z.string(), status: z.string(), token: z.string().optional() })
+      .parse(data);
     await db.order.update({ where: { id }, data: { status } });
     return { success: true };
   },
@@ -63,14 +70,14 @@ export const updateOrderStatus = createServerFn({ method: "POST" }).handler(
 
 export const deleteOrder = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
-    const { id } = z.object({ id: z.string() }).parse(data);
+    if (!(await verifyAuth(data?.token))) return unauthorized;
+    const { id } = z.object({ id: z.string(), token: z.string().optional() }).parse(data);
     await db.order.delete({ where: { id } });
     return { success: true };
   },
 );
 
 export const Route = createFileRoute("/admin/orders")({
-  loader: () => getOrders(),
   component: AdminOrders,
 });
 
@@ -149,8 +156,9 @@ function OrderDetail({ order, onDelete }: { order: any; onDelete: () => void }) 
   const handleUpdate = async () => {
     setUpdating(true);
     try {
-      // @ts-ignore
-      const res = await updateOrderStatus({ data: { id: order.id, status } });
+      const res = await updateOrderStatus({
+        data: { id: order.id, status, token: adminToken() },
+      });
       if (res?.success) toast.success("Status updated!");
       else toast.error("Update failed.");
     } catch {
@@ -164,8 +172,7 @@ function OrderDetail({ order, onDelete }: { order: any; onDelete: () => void }) 
     if (!confirm("Are you sure you want to delete this order? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      // @ts-ignore
-      const res = await deleteOrder({ data: { id: order.id } });
+      const res = await deleteOrder({ data: { id: order.id, token: adminToken() } });
       if (res?.success) {
         toast.success("Order deleted.");
         onDelete();
@@ -342,11 +349,25 @@ function OrderDetail({ order, onDelete }: { order: any; onDelete: () => void }) 
 }
 
 function AdminOrders() {
-  const data = Route.useLoaderData();
-  const [orders, setOrders] = useState<any[]>(data ?? []);
+  const [orders, setOrders] = useState<any[]>([]);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    getOrders({ data: { token: adminToken() } })
+      .then((rows) => {
+        if (alive) setOrders(rows ?? []);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const tabs = ["all", "pending", "processing", "shipped", "delivered", "cancelled"];
 
@@ -464,7 +485,11 @@ function AdminOrders() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ShoppingCart className="w-10 h-10 text-gray-800 mb-3" />
             <p className="text-gray-600 text-sm">
-              {query || tab !== "all" ? "No orders match your filters." : "No orders yet."}
+              {loading
+                ? "Loading orders…"
+                : query || tab !== "all"
+                  ? "No orders match your filters."
+                  : "No orders yet."}
             </p>
           </div>
         ) : (
@@ -529,7 +554,11 @@ function AdminOrders() {
           <div className="flex flex-col items-center justify-center py-20 text-center" style={card}>
             <ShoppingCart className="w-10 h-10 text-gray-800 mb-3" />
             <p className="text-gray-600 text-sm">
-              {query || tab !== "all" ? "No orders match your filters." : "No orders yet."}
+              {loading
+                ? "Loading orders…"
+                : query || tab !== "all"
+                  ? "No orders match your filters."
+                  : "No orders yet."}
             </p>
           </div>
         ) : (

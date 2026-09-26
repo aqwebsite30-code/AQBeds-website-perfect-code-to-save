@@ -17,19 +17,24 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { verifyAuth, adminToken, unauthorized } from "@/lib/auth";
 
-export const getSalespersons = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    return await db.salesperson.findMany({ orderBy: { createdAt: "desc" } });
-  } catch {
-    return [];
-  }
-});
+export const getSalespersons = createServerFn({ method: "GET" }).handler(
+  async (opts?: { data?: { token?: string } }) => {
+    if (!(await verifyAuth(opts?.data?.token))) return [];
+    try {
+      return await db.salesperson.findMany({ orderBy: { createdAt: "desc" } });
+    } catch {
+      return [];
+    }
+  },
+);
 
 export const createSalesperson = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
+    if (!(await verifyAuth(data?.token))) return unauthorized;
     try {
       const schema = z.object({
         fullName: z.string().min(1),
@@ -62,6 +67,7 @@ export const createSalesperson = createServerFn({ method: "POST" }).handler(
 
 export const updateSalesperson = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
+    if (!(await verifyAuth(data?.token))) return unauthorized;
     try {
       const schema = z.object({
         id: z.string().min(1),
@@ -92,6 +98,7 @@ export const updateSalesperson = createServerFn({ method: "POST" }).handler(
 
 export const deleteSalesperson = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
+    if (!(await verifyAuth(data?.token))) return unauthorized;
     try {
       const { id } = z.object({ id: z.string().min(1) }).parse(data);
       await db.salesperson.delete({ where: { id } });
@@ -104,7 +111,6 @@ export const deleteSalesperson = createServerFn({ method: "POST" }).handler(
 );
 
 export const Route = createFileRoute("/admin/sales")({
-  loader: () => getSalespersons(),
   component: AdminSales,
 });
 
@@ -143,21 +149,36 @@ function CopyToken({ value }: { value: string }) {
 }
 
 function AdminSales() {
-  const data = Route.useLoaderData();
-  const [salespeople, setSalespeople] = useState<any[]>(data ?? []);
+  const [salespeople, setSalespeople] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  useEffect(() => {
+    let alive = true;
+    getSalespersons({ data: { token: adminToken() } })
+      .then((rows) => {
+        if (alive) setSalespeople(rows ?? []);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
     setCreating(true);
     try {
-      // @ts-ignore
-      const res = await createSalesperson({ data: { fullName: name, email, phone } });
+      const res = await createSalesperson({
+        data: { fullName: name, email, phone, token: adminToken() },
+      });
       if (res?.success && res.salesperson) {
         setSalespeople((prev) => [res.salesperson, ...prev]);
         setName("");
@@ -178,8 +199,9 @@ function AdminSales() {
     setBusyId(sp.id);
     try {
       const next = sp.status === "active" ? "inactive" : "active";
-      // @ts-ignore
-      const res = await updateSalesperson({ data: { id: sp.id, status: next } });
+      const res = await updateSalesperson({
+        data: { id: sp.id, status: next, token: adminToken() },
+      });
       if (res?.success) {
         setSalespeople((prev) => prev.map((p) => (p.id === sp.id ? { ...p, status: next } : p)));
         toast.success(`Marked ${next}.`);
@@ -197,8 +219,7 @@ function AdminSales() {
     if (!confirm(`Delete ${sp.fullName}? This cannot be undone.`)) return;
     setBusyId(sp.id);
     try {
-      // @ts-ignore
-      const res = await deleteSalesperson({ data: { id: sp.id } });
+      const res = await deleteSalesperson({ data: { id: sp.id, token: adminToken() } });
       if (res?.success) {
         setSalespeople((prev) => prev.filter((p) => p.id !== sp.id));
         toast.success("Deleted.");
@@ -292,7 +313,9 @@ function AdminSales() {
         {salespeople.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Users className="w-10 h-10 text-gray-800 mb-3" />
-            <p className="text-gray-600 text-sm">No salespeople yet. Add your first one above.</p>
+            <p className="text-gray-600 text-sm">
+              {loading ? "Loading sales team…" : "No salespeople yet. Add your first one above."}
+            </p>
           </div>
         ) : (
           salespeople.map((sp, i) => (

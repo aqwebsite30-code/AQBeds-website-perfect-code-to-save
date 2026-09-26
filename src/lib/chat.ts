@@ -2,18 +2,23 @@ import { createServerFn } from "@tanstack/react-start";
 import { db } from "./db";
 import { z } from "zod";
 import { sendChatNotification } from "./email";
+import { verifyAuth, unauthorized } from "./auth";
 
 const messageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   isAdmin: z.boolean().optional(),
+  token: z.string().optional(),
 });
 
 // 1. Send Message
 export const sendChatMessage = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
     try {
-      const { sessionId, content, isAdmin = false } = messageSchema.parse(data);
+      const { sessionId, content, isAdmin = false, token } = messageSchema.parse(data);
+
+      // Visitors may post as themselves; only a signed-in admin may post as admin.
+      if (isAdmin && !(await verifyAuth(token))) return unauthorized;
 
       const msg = await db.chatMessage.create({
         data: {
@@ -53,39 +58,44 @@ export const getChatMessages = createServerFn({ method: "GET" }).handler(
 );
 
 // 3. Get All Active Chat Sessions (Admin only)
-export const getAllChatSessions = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    // Group by sessionId to get unique chats
-    const sessions = await db.chatMessage.groupBy({
-      by: ["sessionId"],
-      _count: { sessionId: true },
-      _max: { createdAt: true },
-    });
+type FnOpts = { data?: { token?: string } };
 
-    // Get the last message for each session to show as snippet
-    const sessionsWithDetails = await Promise.all(
-      sessions.map(async (s) => {
-        const lastMsg = await db.chatMessage.findFirst({
-          where: { sessionId: s.sessionId },
-          orderBy: { createdAt: "desc" },
-        });
-        return {
-          sessionId: s.sessionId,
-          lastMessage: lastMsg?.content || "",
-          updatedAt: s._max.createdAt,
-          count: s._count.sessionId,
-        };
-      }),
-    );
+export const getAllChatSessions = createServerFn({ method: "GET" }).handler(
+  async (opts?: FnOpts) => {
+    if (!(await verifyAuth(opts?.data?.token))) return { success: false, sessions: [] };
+    try {
+      // Group by sessionId to get unique chats
+      const sessions = await db.chatMessage.groupBy({
+        by: ["sessionId"],
+        _count: { sessionId: true },
+        _max: { createdAt: true },
+      });
 
-    return {
-      success: true,
-      sessions: sessionsWithDetails.sort(
-        (a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0),
-      ),
-    };
-  } catch (err) {
-    console.error("Failed to get chat sessions", err);
-    return { success: false, error: "Failed to fetch sessions" };
-  }
-});
+      // Get the last message for each session to show as snippet
+      const sessionsWithDetails = await Promise.all(
+        sessions.map(async (s) => {
+          const lastMsg = await db.chatMessage.findFirst({
+            where: { sessionId: s.sessionId },
+            orderBy: { createdAt: "desc" },
+          });
+          return {
+            sessionId: s.sessionId,
+            lastMessage: lastMsg?.content || "",
+            updatedAt: s._max.createdAt,
+            count: s._count.sessionId,
+          };
+        }),
+      );
+
+      return {
+        success: true,
+        sessions: sessionsWithDetails.sort(
+          (a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0),
+        ),
+      };
+    } catch (err) {
+      console.error("Failed to get chat sessions", err);
+      return { success: false, error: "Failed to fetch sessions" };
+    }
+  },
+);

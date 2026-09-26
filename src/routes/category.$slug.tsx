@@ -11,25 +11,71 @@ export const Route = createFileRoute("/category/$slug")({
     const dbProducts = await getDbProducts();
     return { category: cat, dbProducts };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.category.name} — AQ Beds` },
-          {
-            name: "description",
-            content: `Shop ${loaderData.category.name} at AQ Beds. ${loaderData.category.blurb}.`,
-          },
-          { property: "og:title", content: `${loaderData.category.name} — AQ Beds` },
-          { property: "og:description", content: `Shop ${loaderData.category.name} at AQ Beds. ${loaderData.category.blurb}.` },
-          { property: "og:image", content: `https://www.aqbeds.com${loaderData.category.image}` },
-          { property: "og:url", content: `https://www.aqbeds.com/category/${loaderData.category.slug}` },
-          { property: "og:type", content: "website" },
-          { name: "twitter:card", content: "summary_large_image" },
-          { name: "twitter:title", content: `${loaderData.category.name} — AQ Beds` },
-          { name: "twitter:image", content: `https://www.aqbeds.com${loaderData.category.image}` },
-        ]
-      : [],
-  }),
+  head: ({ loaderData }) => {
+    const noindex = !!loaderData?.category.noindex;
+    const titleBySlug: Record<string, string> = {
+      "divan-beds": "Divan Beds with Storage Drawers | Free UK Delivery - AQ Beds",
+      "ottoman-beds": "Ottoman Beds with Gas-Lift Storage | From £350 - AQ Beds",
+      "luxury-beds": "Luxury Beds from £210 | Velvet Wingback & Sleigh Beds - AQ Beds",
+      wardrobes: "Wardrobes & Sliding Wardrobes UK from £150 - AQ Beds",
+      sofas: "Velvet Sofas & Sofa Beds from £185 - AQ Beds",
+      "sliding-wardrobes": "Sliding Wardrobes UK | Space-Saving Storage - AQ Beds",
+      "all-beds": "All Beds | Ottoman, Divan & Storage Beds UK - AQ Beds",
+    };
+    const title = loaderData
+      ? titleBySlug[loaderData.category.slug] || `${loaderData.category.name} - AQ Beds`
+      : "Category - AQ Beds";
+    const desc = loaderData
+      ? `${loaderData.category.intro || loaderData.category.blurb}`.slice(0, 158)
+      : "";
+    return {
+      meta: loaderData
+        ? [
+            { title },
+            { name: "description", content: desc },
+            ...(noindex ? [{ name: "robots", content: "noindex, follow" }] : []),
+            { property: "og:title", content: title },
+            { property: "og:description", content: desc },
+            { property: "og:image", content: `https://www.aqbeds.com${loaderData.category.image}` },
+            {
+              property: "og:url",
+              content: `https://www.aqbeds.com/category/${loaderData.category.slug}`,
+            },
+            { property: "og:type", content: "website" },
+            { name: "twitter:card", content: "summary_large_image" },
+            { name: "twitter:title", content: title },
+            { name: "twitter:description", content: desc },
+            { name: "twitter:image", content: `https://www.aqbeds.com${loaderData.category.image}` },
+          ]
+        : [],
+      links: loaderData
+        ? [
+            {
+              rel: "canonical",
+              href:
+                loaderData.category.slug === "all-beds"
+                  ? "https://www.aqbeds.com/shop"
+                  : `https://www.aqbeds.com/category/${loaderData.category.slug}`,
+            },
+          ]
+        : [],
+      scripts:
+        loaderData && !noindex
+          ? [
+              {
+                type: "application/ld+json",
+                children: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "CollectionPage",
+                  name: loaderData.category.name,
+                  url: `https://www.aqbeds.com/category/${loaderData.category.slug}`,
+                  description: desc,
+                }),
+              },
+            ]
+          : [],
+    };
+  },
   component: CategoryPage,
   notFoundComponent: () => <div className="p-10 text-center">Category not found.</div>,
   errorComponent: ({ error }) => <div className="p-10 text-center">{error.message}</div>,
@@ -58,19 +104,21 @@ function CategoryPage() {
             transition={{ duration: 0.6 }}
           >
             <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-white/70 font-bold">
-              The Collection
+              {category.name}
             </span>
             <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl mt-2 tracking-tighter leading-none">
               {category.name}
             </h1>
-            <p className="mt-4 text-sm sm:text-lg text-white/60 max-w-2xl font-light leading-relaxed">
-              {category.blurb}
+            <p className="mt-4 text-sm sm:text-lg text-white/70 max-w-3xl font-light leading-relaxed">
+              {category.intro || category.blurb}
             </p>
           </motion.div>
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-4 py-10">
-        <div className="text-sm text-muted-foreground mb-6">{products.length} products</div>
+        <div className="text-sm text-muted-foreground mb-6">
+          {products.length} {products.length === 1 ? "bed" : "products"}
+        </div>
         {products.length === 0 ? (
           <div className="text-center py-24 bg-card rounded-3xl border border-dashed border-border">
             <div className="text-5xl mb-4">✨</div>

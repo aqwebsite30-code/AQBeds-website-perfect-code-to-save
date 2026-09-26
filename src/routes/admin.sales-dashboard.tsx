@@ -13,95 +13,98 @@ import {
   UserX,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { verifyAuth, adminToken } from "@/lib/auth";
 
-export const getSalesDashboard = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    const [salespeople, orders, siteVisits] = await Promise.all([
-      db.salesperson.findMany({ orderBy: { createdAt: "desc" } }),
-      db.order.findMany({
-        where: { salespersonId: { not: null } },
-        orderBy: { createdAt: "desc" },
-        take: 200,
-      }),
-      db.siteVisit.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
-    ]);
+export const getSalesDashboard = createServerFn({ method: "GET" }).handler(
+  async (opts?: { data?: { token?: string } }) => {
+    if (!(await verifyAuth(opts?.data?.token))) return null;
+    try {
+      const [salespeople, orders, siteVisits] = await Promise.all([
+        db.salesperson.findMany({ orderBy: { createdAt: "desc" } }),
+        db.order.findMany({
+          where: { salespersonId: { not: null } },
+          orderBy: { createdAt: "desc" },
+          take: 200,
+        }),
+        db.siteVisit.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
+      ]);
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
 
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
 
-    const totalSalespeople = salespeople.length;
-    const totalVisits = siteVisits.length;
-    const todayVisitsList = siteVisits.filter((v) => new Date(v.createdAt) >= todayStart);
-    const todayVisits = todayVisitsList.length;
-    const totalOrders = orders.length;
-    const todayOrdersList = orders.filter((o) => new Date(o.createdAt) >= todayStart);
-    const todayOrders = todayOrdersList.length;
-    const todayRevenue = todayOrdersList.reduce((s, o) => s + o.total, 0);
-    const monthOrdersList = orders.filter((o) => new Date(o.createdAt) >= monthStart);
-    const monthRevenue = monthOrdersList.reduce((s, o) => s + o.total, 0);
-    const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
-    const overallConversion = totalVisits > 0 ? (totalOrders / totalVisits) * 100 : 0;
+      const totalSalespeople = salespeople.length;
+      const totalVisits = siteVisits.length;
+      const todayVisitsList = siteVisits.filter((v) => new Date(v.createdAt) >= todayStart);
+      const todayVisits = todayVisitsList.length;
+      const totalOrders = orders.length;
+      const todayOrdersList = orders.filter((o) => new Date(o.createdAt) >= todayStart);
+      const todayOrders = todayOrdersList.length;
+      const todayRevenue = todayOrdersList.reduce((s, o) => s + o.total, 0);
+      const monthOrdersList = orders.filter((o) => new Date(o.createdAt) >= monthStart);
+      const monthRevenue = monthOrdersList.reduce((s, o) => s + o.total, 0);
+      const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+      const overallConversion = totalVisits > 0 ? (totalOrders / totalVisits) * 100 : 0;
 
-    const visitCounts: Record<string, number> = {};
-    for (const v of siteVisits) {
-      visitCounts[v.salespersonId] = (visitCounts[v.salespersonId] ?? 0) + 1;
-    }
+      const visitCounts: Record<string, number> = {};
+      for (const v of siteVisits) {
+        visitCounts[v.salespersonId] = (visitCounts[v.salespersonId] ?? 0) + 1;
+      }
 
-    const employeeStats = salespeople.map((sp) => {
-      const spOrders = orders.filter((o) => o.salespersonId === sp.id);
-      const spVisits = visitCounts[sp.id] ?? 0;
-      const revenue = spOrders.reduce((s, o) => s + o.total, 0);
-      const orderCount = spOrders.length;
+      const employeeStats = salespeople.map((sp) => {
+        const spOrders = orders.filter((o) => o.salespersonId === sp.id);
+        const spVisits = visitCounts[sp.id] ?? 0;
+        const revenue = spOrders.reduce((s, o) => s + o.total, 0);
+        const orderCount = spOrders.length;
+        return {
+          id: sp.id,
+          fullName: sp.fullName,
+          employeeCode: sp.employeeCode,
+          token: sp.token,
+          status: sp.status,
+          visitCount: spVisits,
+          orderCount,
+          revenue,
+          conversion: spVisits > 0 ? (orderCount / spVisits) * 100 : 0,
+          avgOrderValue: orderCount > 0 ? revenue / orderCount : 0,
+        };
+      });
+
+      const activeStats = employeeStats.filter((e) => e.status === "active");
+      const inactiveStats = employeeStats.filter((e) => e.status !== "active");
+
+      const topByRevenue =
+        [...activeStats].sort((a, b) => b.revenue - a.revenue).slice(0, 1)[0] ?? null;
+      const topByClicks =
+        [...activeStats].sort((a, b) => b.visitCount - a.visitCount).slice(0, 1)[0] ?? null;
+
       return {
-        id: sp.id,
-        fullName: sp.fullName,
-        employeeCode: sp.employeeCode,
-        token: sp.token,
-        status: sp.status,
-        visitCount: spVisits,
-        orderCount,
-        revenue,
-        conversion: spVisits > 0 ? (orderCount / spVisits) * 100 : 0,
-        avgOrderValue: orderCount > 0 ? revenue / orderCount : 0,
+        totalSalespeople,
+        totalVisits,
+        todayVisits,
+        totalOrders,
+        todayOrders,
+        todayRevenue,
+        monthRevenue,
+        totalRevenue,
+        overallConversion,
+        topByRevenue,
+        topByClicks,
+        activeStats,
+        inactiveStats,
       };
-    });
-
-    const activeStats = employeeStats.filter((e) => e.status === "active");
-    const inactiveStats = employeeStats.filter((e) => e.status !== "active");
-
-    const topByRevenue =
-      [...activeStats].sort((a, b) => b.revenue - a.revenue).slice(0, 1)[0] ?? null;
-    const topByClicks =
-      [...activeStats].sort((a, b) => b.visitCount - a.visitCount).slice(0, 1)[0] ?? null;
-
-    return {
-      totalSalespeople,
-      totalVisits,
-      todayVisits,
-      totalOrders,
-      todayOrders,
-      todayRevenue,
-      monthRevenue,
-      totalRevenue,
-      overallConversion,
-      topByRevenue,
-      topByClicks,
-      activeStats,
-      inactiveStats,
-    };
-  } catch (err: any) {
-    console.error("getSalesDashboard error:", err?.message || err);
-    return null;
-  }
-});
+    } catch (err: any) {
+      console.error("getSalesDashboard error:", err?.message || err);
+      return null;
+    }
+  },
+);
 
 export const Route = createFileRoute("/admin/sales-dashboard")({
-  loader: () => getSalesDashboard(),
   component: AdminSalesDashboard,
 });
 
@@ -214,35 +217,14 @@ function EmployeeTable({ stats, emptyText }: { stats: any[]; emptyText: string }
 }
 
 function AdminSalesDashboard() {
-  const initialData = Route.useLoaderData();
-  const [data, setData] = useState<any>(initialData);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-        <div className="p-4 bg-red-500/10 rounded-2xl mb-4 text-red-500">
-          <TrendingUp className="w-8 h-8 mx-auto mb-2" />
-          <h2 className="text-xl font-bold">Dashboard Error</h2>
-        </div>
-        <p className="text-gray-400 max-w-md">
-          We couldn't load the sales dashboard data. Please check the database connection.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-6 px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition-all"
-        >
-          Try Refreshing
-        </button>
-      </div>
-    );
-  }
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      // @ts-ignore
-      const fresh = await getSalesDashboard();
+      const fresh = await getSalesDashboard({ data: { token: adminToken() } });
       if (fresh) setData(fresh);
     } catch {
       /* ignore refresh errors */
@@ -250,6 +232,49 @@ function AdminSalesDashboard() {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    let alive = true;
+    getSalesDashboard({ data: { token: adminToken() } })
+      .then((res) => {
+        if (alive) setData(res);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        {loading ? (
+          <>
+            <div className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />
+            <p className="text-gray-500 text-sm mt-4">Loading sales dashboard…</p>
+          </>
+        ) : (
+          <>
+            <div className="p-4 bg-red-500/10 rounded-2xl mb-4 text-red-500">
+              <TrendingUp className="w-8 h-8 mx-auto mb-2" />
+              <h2 className="text-xl font-bold">Dashboard Error</h2>
+            </div>
+            <p className="text-gray-400 max-w-md">
+              We couldn't load the sales dashboard data. Please check the database connection.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition-all"
+            >
+              Try Refreshing
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
 
   const activeCount = data.activeStats.length;
   const inactiveCount = data.inactiveStats.length;

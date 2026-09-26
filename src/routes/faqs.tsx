@@ -6,14 +6,25 @@ export const Route = createFileRoute("/faqs")({
       { title: "FAQs — AQ Beds" },
       { name: "description", content: "Frequently asked questions about AQ Beds." },
       { property: "og:title", content: "FAQs — AQ Beds" },
-      { property: "og:description", content: "Frequently asked questions about AQ Beds delivery, returns, materials, payments and more." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:description",
+        content:
+          "Frequently asked questions about AQ Beds delivery, returns, materials, payments and more.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/faqs" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "FAQs — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/faqs" }],
   }),
   component: FAQsPage,
 });
@@ -27,7 +38,7 @@ const faqs = [
   {
     question: "What is your return policy?",
     answer:
-      "We offer a 30-day return window from the date of delivery. Items must be unused and in their original packaging. Contact us within 14 days to initiate a return and we'll arrange a free collection.",
+      "We offer a 30-day return window from the date of delivery. Items must be unused and in their original packaging. Contact us within 30 days to initiate a return and we'll arrange a free collection.",
   },
   {
     question: "Do you offer cash on delivery?",

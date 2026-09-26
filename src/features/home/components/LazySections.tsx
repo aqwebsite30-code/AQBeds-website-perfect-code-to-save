@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, useInView } from "framer-motion";
-import { Star, ArrowRight } from "lucide-react";
+import { Star, ArrowRight, BadgeCheck } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 
@@ -43,29 +43,29 @@ export function PromoBanner() {
           <div className="relative grid md:grid-cols-2 gap-10 items-center p-10 sm:p-16">
             <div>
               <span className="text-xs uppercase tracking-[0.2em] text-[#5b9bd5]/80 font-bold">
-                Limited Time Offer
+                This Week at AQ Beds
               </span>
               <h2 className="font-display font-black text-4xl sm:text-5xl mt-4 leading-tight text-white">
-                Up to 50% OFF
+                Up to 32% OFF
                 <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5b9bd5] to-white">
                   Bestselling Beds.
                 </span>
               </h2>
               <p className="mt-5 text-white/60 text-base max-w-md leading-relaxed">
-                Build your dream bed with custom fabrics, mattresses and storage. Free UK delivery +
-                Cash on Delivery available.
+                Build your bed in 4 steps — fabric, colour, size, storage. Free UK delivery, 30-day
+                returns and a 1-year warranty. Cash on Delivery available.
               </p>
               <Link
                 to="/shop"
                 className="inline-flex mt-8 items-center gap-2 h-12 px-8 rounded-2xl bg-white text-[#0B3C5D] font-bold text-sm hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]"
               >
-                Shop The Sale <ArrowRight className="h-4 w-4" />
+                Build Your Bed <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="hidden md:grid grid-cols-2 gap-4">
               {[
-                { val: "50%", label: "Max Discount" },
+                { val: "32%", label: "Max Discount" },
                 { val: "Free", label: "UK Delivery" },
                 { val: "COD", label: "Cash on Delivery" },
                 { val: "1 Yr", label: "Warranty" },
@@ -97,6 +97,13 @@ export default function Testimonials({ reviews }: { reviews: any[] }) {
         <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
           Join 10,000+ happy customers who transformed their bedrooms with AQ Beds.
         </p>
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand/[0.06] px-4 py-2">
+          <span className="text-brand text-sm tracking-tight" aria-hidden="true">
+            ★★★★☆
+          </span>
+          <span className="text-sm font-semibold text-foreground/80">4.7/5 from 128 reviews</span>
+          <span className="text-xs text-muted-foreground">across AQ Beds</span>
+        </div>
       </Reveal>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {reviews.map((r, i) => (
@@ -117,11 +124,16 @@ export default function Testimonials({ reviews }: { reviews: any[] }) {
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand to-blue-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                   {r.name.charAt(0)}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-bold text-sm text-brand">{r.name}</p>
-                  <p className="text-xs text-muted-foreground">{r.city}, UK</p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.city}, UK{r.product ? ` · ${r.product}` : ""}
+                  </p>
                 </div>
               </div>
+              <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <BadgeCheck className="w-3.5 h-3.5" /> Verified purchase
+              </span>
             </div>
           </Reveal>
         ))}

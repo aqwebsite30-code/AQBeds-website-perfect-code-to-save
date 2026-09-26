@@ -7,16 +7,28 @@ export const Route = createFileRoute("/wishlist")({
   head: () => ({
     meta: [
       { title: "Wishlist — AQ Beds" },
-      { name: "description", content: "View your saved AQ Beds favourites. Add to basket or remove items from your wishlist." },
+      {
+        name: "description",
+        content:
+          "View your saved AQ Beds favourites. Add to basket or remove items from your wishlist.",
+      },
       { property: "og:title", content: "Wishlist — AQ Beds" },
       { property: "og:description", content: "View your saved AQ Beds favourites." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/wishlist" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Wishlist — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
+      { name: "robots", content: "noindex, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/wishlist" }],
   }),
   component: WishlistPage,
 });

@@ -11,72 +11,99 @@ export type Category =
   | "bedroom-furniture"
   | "sofas";
 
-export const CATEGORIES: { slug: Category; name: string; image: string; blurb: string }[] = [
+export const CATEGORIES: {
+  slug: Category;
+  name: string;
+  image: string;
+  blurb: string;
+  intro?: string;
+  noindex?: boolean;
+}[] = [
   {
     slug: "all-beds",
     name: "All Beds",
     image: "/all products img/Ambessador/1.webp",
     blurb: "Our entire collection of handcrafted beds",
+    intro:
+      "Every AQ Beds frame in one place - ottoman, divan, storage and luxury beds in crushed and plush velvet, with a mattress included and free UK delivery. Filter by size, style and budget from £185, with 30-day returns and a 1-year frame warranty on every bed.",
   },
   {
     slug: "luxury-beds",
     name: "Luxury Beds",
-    image: "/all products img/Divan Ottoman bed/1.webp",
-    blurb: "Statement pieces",
+    image: "/all products img/Ambessador/1.webp",
+    blurb: "Velvet, wingback & sleigh frames that anchor the room",
+    intro:
+      "Statement beds for the room everyone remembers. Wingback headboards, sleigh frames and gold-strip detailing in crushed and plush velvet - handcrafted, made to order, from £210. Free UK delivery and a 1-year warranty on every frame, with a mattress included.",
   },
   {
     slug: "ottoman-beds",
     name: "Ottoman Beds",
-    image: "/all products img/Bunk beds/1.webp",
-    blurb: "Lift-up storage frames",
+    image: "/all products img/Divan Ottoman bed/1.webp",
+    blurb: "Gas-lift storage that hides a wardrobe's worth of clutter",
+    intro:
+      "Ottoman beds lift up to reveal a full storage cavity - no drawers, no wasted floor space. One smooth gas-lift motion gives you room for bedding, seasonal clothes and suitcases. Upholstered in crushed or plush velvet, delivered free across the UK with a 30-day return window.",
   },
   {
     slug: "wardrobes",
     name: "Wardrobes",
     image: "/Wardrobes/alina-wardrobe-main.webp",
-    blurb: "Elegant storage solutions",
+    blurb: "Free-standing wardrobes from £150 - doors that fit your space",
+    intro:
+      "Wardrobes that fit the room - and the awkward alcove. Free-standing options with adjustable rails and shelving, from £150 with up to 32% off this week. Built flat-packed for easy upstairs delivery, with free UK shipping and 30-day returns.",
   },
   {
     slug: "sliding-wardrobes",
     name: "Sliding Wardrobes",
     image: "/Sliding wardrobe/sliding-wardrobe-main.webp",
-    blurb: "Sleek sliding space-savers",
+    blurb: "Sliding-door wardrobes for tight spaces where doors won't swing",
+    intro:
+      "Sliding-door wardrobes for bedrooms where a hinged door will never open. Wide panels glide on quiet runners, doubling your usable floor space, with mirrored or velvet finishes. Free UK delivery, 30-day returns and flat-packed for easy upstairs installation.",
   },
   {
     slug: "divan-beds",
     name: "Divan Beds",
     image: "/all products img/Divan/1 Panel line head board.webp",
-    blurb: "Classic divan beds with integrated storage",
+    blurb: "Divan bases with drawers built in - the bedroom classic, upgraded",
+    intro:
+      "Divan beds with built-in storage, made for British bedrooms. Choose a soft-touch or velvet finish, add one to four smooth-glide drawers, and pick your mattress - from orthopaedic support to 2000 pocket sprung. Free UK delivery, 1-year frame warranty, sizes from 3ft single to 6ft super king.",
   },
   {
     slug: "storage-beds",
     name: "Storage Beds",
     image: "/all products img/Ambessador/1.webp",
     blurb: "Beds with clever built-in storage solutions",
+    noindex: true,
   },
   {
     slug: "mattresses",
     name: "Mattresses",
     image: "/all products img/Divan/1 Panel line head board.webp",
     blurb: "Premium mattresses for the perfect night's sleep",
+    noindex: true,
   },
   {
     slug: "headboards",
     name: "Headboards",
     image: "/Home%20page%20images/1000152187-clean.webp",
     blurb: "Stylish headboards to complete your bedroom",
+    noindex: true,
   },
   {
     slug: "sofas",
     name: "Sofas",
     image: "/Sofas/Chesterfield Sofa/chesterfield-sofa-main.webp",
-    blurb: "Premium sofas for luxury and comfort",
+    blurb: "Velvet sofas & sofa beds from £185",
+    intro:
+      "Velvet sofas, sofa beds and corner sets - from £185. Deep-seat comfort with solid hardwood frames, in colours that match our beds (yes, you can coordinate the whole room). Free UK delivery, 30-day returns and Cash on Delivery available.",
   },
 ];
 
-export type Option = { name: string; extraPrice: number };
+export type Option = { name: string; extraPrice: number; included?: boolean };
 
 export const DISCOUNT_POSTCODES = [
+  "LS",
+  "BD",
+  "HG",
   "WF",
   "S",
   "DN",
@@ -304,12 +331,14 @@ const baseProducts: Product[] = [
         { name: "4'6ft Standard Double – With Mattress", extraPrice: 50 },
         { name: "5ft King Size – With Mattress", extraPrice: 60 },
         { name: "6ft Super King – With Mattress", extraPrice: 100 },
-        { name: "3ft Standard Single – No Mattress", extraPrice: 60 },
-        { name: "4ft Small Double – No Mattress", extraPrice: 120 },
-        { name: "4'6ft Standard Double – No Mattress", extraPrice: 120 },
-        { name: "5ft King Size – No Mattress", extraPrice: 150 },
-        { name: "6ft Super King – No Mattress", extraPrice: 240 },
+        { name: "3ft Standard Single – No Mattress", extraPrice: -50 },
+        { name: "4ft Small Double – No Mattress", extraPrice: 0 },
+        { name: "4'6ft Standard Double – No Mattress", extraPrice: 0 },
+        { name: "5ft King Size – No Mattress", extraPrice: 10 },
+        { name: "6ft Super King – No Mattress", extraPrice: 50 },
       ],
+      description:
+        "Your bedroom's new centrepiece — with a secret. The Ambessador pairs a deep-buttoned, hand-finished headboard with a solid timber frame you'll never hear creak. Choose crushed or plush velvet in 16 colours, then add gas-lift ottoman storage that swallows duvets, suitcases and everything else you'd rather not look at. Every Ambessador includes a comfort mattress free — so it's sleep-ready the day it arrives. Free UK delivery · 30-day returns · 1-year warranty · Pay on delivery available.",
       images: [
         "/all products img/Ambessador/1.webp",
         "/all products img/Ambessador/2.webp",
@@ -444,7 +473,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "divan-ottoman-bed",
-    "Ottoman Bed",
+    "Aurora Ottoman Gas-Lift Bed",
     "ottoman-beds",
     350,
     400,
@@ -470,7 +499,7 @@ const baseProducts: Product[] = [
         { name: "No Assembly", extraPrice: 0 },
         { name: "With Professional Assembly", extraPrice: 60 },
       ],
-      storageOptions: [{ name: "Ottoman Gas Lift (Included)", extraPrice: 0 }],
+      storageOptions: [{ name: "Ottoman Gas Lift", extraPrice: 0, included: true }],
       images: [
         "/all products img/Divan Ottoman bed/1.webp",
         "/all products img/Divan Ottoman bed/2.webp",
@@ -478,7 +507,7 @@ const baseProducts: Product[] = [
         "/all products img/Divan Ottoman bed/4.webp",
       ],
       description:
-        'Luxury Divan Ottoman Gas Lift Storage Bed — includes Irish 10" mattress (with mattress option). Standard 45" headboard included. Professional assembly available for £60.',
+        'A full storage room hiding under your mattress. One hand, one motion: the gas-lift base rises to reveal a full-width cavity — bedding, suitcases, winter coats, gone. Built on a solid timber frame with a 45" standard headboard (54" available), upholstered in 16 velvet and chenille shades, and delivered free with a mattress included from £350. Free UK delivery · 30-day returns · 1-year warranty · Pay on delivery available.',
     },
   ),
 
@@ -1547,7 +1576,7 @@ const baseProducts: Product[] = [
     "sofas",
     280,
     320,
-    "/Sofas/Verona Sofa/diamontee-sofa-main.webp",
+    "/Sofas/Verona Sofa/verona-sofa-main.webp",
     {
       sizes: [
         { name: "1 seater", extraPrice: 0 },
@@ -1565,10 +1594,10 @@ const baseProducts: Product[] = [
         { name: "Chrome legs", extraPrice: 50 },
       ],
       images: [
-        "/Sofas/Verona Sofa/diamontee-sofa-main.webp",
-        "/Sofas/Verona Sofa/diamontee-sofa-gallery-1.webp",
-        "/Sofas/Verona Sofa/diamontee-sofa-gallery-2.webp",
-        "/Sofas/Verona Sofa/diamontee-sofa-gallery-3.webp",
+        "/Sofas/Verona Sofa/verona-sofa-main.webp",
+        "/Sofas/Verona Sofa/verona-sofa-gallery-1.webp",
+        "/Sofas/Verona Sofa/verona-sofa-gallery-2.webp",
+        "/Sofas/Verona Sofa/verona-sofa-gallery-3.webp",
       ],
       description: "Premium handcrafted Diamontee Sofa, customized for luxury and comfort.",
       storageOptions: [],

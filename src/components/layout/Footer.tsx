@@ -1,18 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CATEGORIES } from "@/features/products/data/products";
 import { buildWhatsAppUrl } from "@/lib/utils/format";
-import {
-  Facebook,
-  Instagram,
-  Twitter,
-  Mail,
-  ArrowRight,
-  MapPin,
-  Phone,
-  ShieldCheck,
-  Truck,
-  Award,
-} from "lucide-react";
+import { Mail, ArrowRight, MapPin, Phone, ShieldCheck, Truck, Award, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
@@ -50,9 +39,12 @@ export function Footer() {
           </form>
           <div className="mt-7 flex items-center gap-3">
             {[
-              { href: "#", icon: Instagram, label: "Instagram" },
-              { href: "#", icon: Facebook, label: "Facebook" },
-              { href: "#", icon: Twitter, label: "Twitter" },
+              {
+                href: buildWhatsAppUrl("Hello AQ Beds"),
+                icon: MessageCircle,
+                label: "WhatsApp",
+              },
+              { href: "mailto:aqbeds2822@gmail.com", icon: Mail, label: "Email" },
             ].map(({ href, icon: Icon, label }) => (
               <a
                 key={label}
@@ -185,12 +177,12 @@ export function Footer() {
 
       <div className="relative border-t border-white/8">
         <div className="mx-auto max-w-7xl px-4 py-6 flex flex-wrap items-center justify-between gap-4">
-          <span className="text-xs text-white/30">© 2018 AQ Beds. All rights reserved.</span>
+          <span className="text-xs text-white/30">© 2018–2026 AQ Beds. All rights reserved.</span>
           <div className="flex items-center gap-6 text-xs text-white/30">
-            <Link to="/faqs" className="hover:text-white/60 transition-colors">
+            <Link to="/privacy" className="hover:text-white/60 transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/faqs" className="hover:text-white/60 transition-colors">
+            <Link to="/terms" className="hover:text-white/60 transition-colors">
               Terms of Service
             </Link>
           </div>

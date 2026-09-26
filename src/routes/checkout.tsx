@@ -12,7 +12,10 @@ import { trackPixelWithId, generateEventId, getClientTrackingData } from "@/lib/
 import { sendInitiateCheckoutEvent } from "@/lib/meta-capi";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — AQ Beds" }] }),
+  head: () => ({
+    meta: [{ title: "Checkout — AQ Beds" }, { name: "robots", content: "noindex, follow" }],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/checkout" }],
+  }),
   component: CheckoutPage,
 });
 
@@ -179,13 +182,18 @@ function CheckoutPage() {
       if (!purchaseFired.current) {
         purchaseFired.current = true;
         if (typeof window !== "undefined" && typeof window.fbq === "function") {
-          window.fbq("track", "Purchase", {
-            value: total(),
-            currency: "GBP",
-            content_ids: items.map((i) => String(i.productId)).filter(Boolean),
-            content_type: "product",
-            order_id: orderId,
-          }, { eventID: purchaseEventId });
+          window.fbq(
+            "track",
+            "Purchase",
+            {
+              value: total(),
+              currency: "GBP",
+              content_ids: items.map((i) => String(i.productId)).filter(Boolean),
+              content_type: "product",
+              order_id: orderId,
+            },
+            { eventID: purchaseEventId },
+          );
         }
       }
       clear();

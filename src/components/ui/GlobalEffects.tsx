@@ -18,9 +18,6 @@ export function GlobalEffects() {
     document.addEventListener("keydown", initAudio, { once: true });
     document.addEventListener("touchstart", initAudio, { once: true });
 
-    const now = performance.now();
-    console.log(`[AQ-DEBUG] GlobalEffects Active at: ${now.toFixed(2)}ms`);
-
     return () => {
       document.removeEventListener("mousedown", initAudio);
       document.removeEventListener("keydown", initAudio);

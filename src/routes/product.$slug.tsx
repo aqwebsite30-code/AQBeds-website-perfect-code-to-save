@@ -8,16 +8,7 @@ import { getDbProductBySlug } from "@/lib/products";
 import { formatGBP } from "@/lib/utils/format";
 import { useCart, useUI, useWishlist } from "@/features/cart/store/cart";
 import { ProductCard } from "@/features/products/components/ProductCard";
-import {
-  Truck,
-  ShieldCheck,
-  Star,
-  Heart,
-  Minus,
-  Plus,
-  ShoppingBag,
-  MessageCircle,
-} from "lucide-react";
+import { Truck, ShieldCheck, Heart, Minus, Plus, ShoppingBag, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/product/$slug")({
@@ -48,9 +39,17 @@ export const Route = createFileRoute("/product/$slug")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.product.name} — AQ Beds` },
-          { name: "description", content: loaderData.product.description.slice(0, 155) },
-          { property: "og:title", content: `${loaderData.product.name} — AQ Beds` },
+          {
+            title: `${loaderData.product.name} | ${loaderData.product.category === "sofas" ? "Velvet Sofa" : "Storage & Mattress Included"} - AQ Beds`,
+          },
+          {
+            name: "description",
+            content: `${loaderData.product.description.slice(0, 140)}. Free UK delivery, 30-day returns & 1-year warranty.`,
+          },
+          {
+            property: "og:title",
+            content: `${loaderData.product.name} | Storage & Mattress Included - AQ Beds`,
+          },
           { property: "og:description", content: loaderData.product.description.slice(0, 155) },
           {
             property: "og:image",
@@ -62,12 +61,16 @@ export const Route = createFileRoute("/product/$slug")({
           },
           { property: "og:type", content: "product" },
           { name: "twitter:card", content: "summary_large_image" },
-          { name: "twitter:title", content: `${loaderData.product.name} — AQ Beds` },
+          { name: "twitter:title", content: `${loaderData.product.name} - AQ Beds` },
+          { name: "twitter:description", content: loaderData.product.description.slice(0, 155) },
           {
             name: "twitter:image",
             content: `https://www.aqbeds.com${loaderData.product.images[0]}`,
           },
         ]
+      : [],
+    links: loaderData
+      ? [{ rel: "canonical", href: `https://www.aqbeds.com/product/${loaderData.product.slug}` }]
       : [],
     scripts: loaderData
       ? [
@@ -78,15 +81,40 @@ export const Route = createFileRoute("/product/$slug")({
               "@type": "Product",
               name: loaderData.product.name,
               description: loaderData.product.description,
-              image: `https://aqbeds.vercel.app${loaderData.product.images[0]}`,
+              image: `https://www.aqbeds.com${loaderData.product.images[0]}`,
               brand: { "@type": "Brand", name: "AQ Beds" },
               offers: {
                 "@type": "Offer",
                 price: loaderData.product.basePrice,
                 priceCurrency: "GBP",
-                availability: "https://schema.org/InStock",
-                url: `https://aqbeds.vercel.app/product/${loaderData.product.slug}`,
+                availability:
+                  loaderData.product.stock > 0
+                    ? "https://schema.org/InStock"
+                    : "https://schema.org/OutOfStock",
+                url: `https://www.aqbeds.com/product/${loaderData.product.slug}`,
               },
+            }),
+          },
+          {
+            type: "application/ld+json",
+            children: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: "https://www.aqbeds.com/" },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Shop",
+                  item: "https://www.aqbeds.com/shop",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: loaderData.product.name,
+                  item: `https://www.aqbeds.com/product/${loaderData.product.slug}`,
+                },
+              ],
             }),
           },
         ]
@@ -418,7 +446,7 @@ function ProductPage() {
 
   const unitPrice = useMemo(() => {
     let storagePrice = 0;
-    if (storage && storage.name !== "No Storage") {
+    if (storage && storage.name !== "No Storage" && storage.included !== true) {
       if (
         storage.name.toLowerCase().includes("ottoman") ||
         storage.name.toLowerCase().includes("gas lift")
@@ -611,12 +639,7 @@ function ProductPage() {
 
           <div>
             <div className="flex items-center gap-2 text-sm">
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
-                <span className="font-medium">{product.rating.toFixed(1)}</span>
-              </div>
-              <span className="text-muted-foreground">· {product.reviews} reviews</span>
-              <span className="ml-3 text-whatsapp font-medium">In stock ({product.stock})</span>
+              <span className="text-whatsapp font-medium">✓ In stock — dispatches in 3–5 days</span>
             </div>
             <h1 className="font-display font-bold text-3xl sm:text-4xl mt-3">{product.name}</h1>
             <div className="mt-4 flex items-baseline gap-3">
@@ -625,7 +648,7 @@ function ProductPage() {
                   <span className="font-display font-bold text-3xl text-brand">
                     {formatGBP(unitPrice)}
                   </span>
-                  {product.originalPrice && (
+                  {product.originalPrice && product.originalPrice > product.basePrice && (
                     <span className="text-muted-foreground line-through">
                       {formatGBP(product.originalPrice)}
                     </span>
@@ -643,7 +666,7 @@ function ProductPage() {
             {/* Options mapping here */}
             {isSofa ? (
               <>
-                <OptionGroup label="1. Select Fabric" value={fabric?.name}>
+                <OptionGroup label="1. Pick Your Fabric" value={fabric?.name}>
                   <Pills
                     items={sofaFabrics}
                     active={fabric}
@@ -655,7 +678,7 @@ function ProductPage() {
                 </OptionGroup>
 
                 {fabric && SOFA_PALETTES[fabric.name] && (
-                  <OptionGroup label={`2. Select Color (${fabric.name})`} value={color?.name}>
+                  <OptionGroup label={`2. Choose Your Colour (${fabric.name})`} value={color?.name}>
                     <div className="flex flex-wrap gap-3">
                       {SOFA_PALETTES[fabric.name].map((c) => (
                         <button
@@ -691,7 +714,7 @@ function ProductPage() {
               </>
             ) : product.fabrics && product.fabrics.length > 0 ? (
               <>
-                <OptionGroup label="1. Select Fabric" value={fabric?.name}>
+                <OptionGroup label="1. Pick Your Fabric" value={fabric?.name}>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {product.fabrics.map((fb: any) => {
                       const active = fabric?.name === fb.name;
@@ -724,7 +747,7 @@ function ProductPage() {
                 </OptionGroup>
 
                 {fabric && getBedPalette(fabric).length > 0 && (
-                  <OptionGroup label={`2. Select Color (${fabric.name})`} value={color?.name}>
+                  <OptionGroup label={`2. Choose Your Colour (${fabric.name})`} value={color?.name}>
                     <div className="flex flex-wrap gap-3">
                       {getBedPalette(fabric).map((c: any) => (
                         <button
@@ -795,7 +818,7 @@ function ProductPage() {
             )}
 
             {isSofa ? (
-              <OptionGroup label="3. Size" value={size?.name}>
+              <OptionGroup label="3. Size & Mattress" value={size?.name}>
                 <Pills
                   items={product.sizes}
                   active={size}
@@ -895,7 +918,11 @@ function ProductPage() {
                       opt.name.toLowerCase().includes("ottoman") ||
                       opt.name.toLowerCase().includes("gas lift");
                     const price =
-                      opt.name === "No Storage" ? 0 : isGas ? ottomanSurcharge : opt.extraPrice;
+                      opt.name === "No Storage" || opt.included
+                        ? 0
+                        : isGas
+                          ? ottomanSurcharge
+                          : opt.extraPrice;
                     const active = storage?.name === opt.name;
                     return (
                       <button
@@ -916,7 +943,8 @@ function ProductPage() {
                 <Truck className="h-4 w-4" /> Local Delivery Discount
               </h2>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Areas like <b>LS, HG, WF, S</b> get £20 off. Enter postcode prefix:
+                Local to Leeds, Bradford, Wakefield or Sheffield? You're on our own delivery run —
+                £20 off at checkout. Enter your postcode:
               </p>
               <input
                 type="text"
@@ -927,7 +955,7 @@ function ProductPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                 }}
-                placeholder="e.g. LS, HG, WF, S"
+                placeholder="e.g. LS, BD, WF, S"
                 className="w-full h-12 px-5 rounded-2xl bg-white border border-border outline-none focus:border-brand uppercase"
               />
             </div>
@@ -985,17 +1013,23 @@ function ProductPage() {
                 href={`https://wa.me/447519791128?text=${waMessage}`}
                 target="_blank"
                 rel="noreferrer"
-                className="h-14 rounded-2xl bg-whatsapp text-white font-black flex items-center justify-center gap-3 shadow-lg"
+                className="h-14 rounded-2xl bg-whatsapp text-white font-black flex items-center justify-center gap-3 shadow-lg text-center leading-tight px-3"
               >
-                <MessageCircle className="h-5 w-5" /> WhatsApp
+                <MessageCircle className="h-5 w-5 shrink-0" /> Order via WhatsApp — we reply in
+                minutes
               </a>
             </div>
+            <p className="mt-3 text-[11px] text-muted-foreground text-center leading-relaxed">
+              🔒 Secure checkout · or pay Cash on Delivery · 30-day returns · 1-year warranty
+            </p>
           </div>
         </div>
 
         {related.length > 0 && (
           <section className="mt-20">
-            <h2 className="font-display font-bold text-2xl sm:text-3xl mb-6">You may also like</h2>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl mb-6">
+              Complete the look — or compare these instead
+            </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {related.map((p) => (
                 <ProductCard key={p.id} product={p} />
@@ -1033,20 +1067,31 @@ function ProductPage() {
               </div>
             </motion.div>
 
-            {/* Mobile Minimal Total Price Pill - sits ABOVE the cart bar when present */}
+            {/* Mobile sticky add-to-basket bar - sits ABOVE the cart bar when present */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
-              className={`lg:hidden fixed left-1/2 -translate-x-1/2 h-12 px-7 rounded-full bg-brand text-brand-foreground shadow-2xl z-40 flex items-center justify-center gap-2 border border-white/20 transition-all duration-300 ${
-                cartCount > 0 ? "bottom-20" : "bottom-6"
+              className={`lg:hidden fixed left-0 right-0 px-3 z-40 transition-all duration-300 ${
+                cartCount > 0 ? "bottom-[76px]" : "bottom-3"
               }`}
             >
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-75">
-                Live Total
-              </span>
-              <span className="w-px h-4 bg-white/30" />
-              <span className="text-lg font-display font-black">{formatGBP(total)}</span>
+              <div className="rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-luxury px-4 py-2.5 flex items-center gap-3">
+                <div className="min-w-0">
+                  <span className="block text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+                    Live Total
+                  </span>
+                  <span className="block font-display font-black text-xl text-brand leading-tight">
+                    {formatGBP(total)}
+                  </span>
+                </div>
+                <button
+                  onClick={onAdd}
+                  className="ml-auto h-12 px-5 rounded-xl bg-brand text-brand-foreground font-black text-sm flex items-center gap-2 shadow-lg active:scale-95 transition-all"
+                >
+                  <ShoppingBag className="h-5 w-5" /> Add To Basket
+                </button>
+              </div>
             </motion.div>
           </>
         )}

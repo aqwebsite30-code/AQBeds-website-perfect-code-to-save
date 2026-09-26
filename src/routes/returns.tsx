@@ -10,14 +10,25 @@ export const Route = createFileRoute("/returns")({
           "AQ Beds 30-day returns policy — unused items in original packaging. Free returns, easy process, and fast refunds for UK customers.",
       },
       { property: "og:title", content: "Returns Policy — AQ Beds" },
-      { property: "og:description", content: "AQ Beds 30-day returns policy — unused items in original packaging. Free returns, easy process, and fast refunds for UK customers." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:description",
+        content:
+          "AQ Beds 30-day returns policy — unused items in original packaging. Free returns, easy process, and fast refunds for UK customers.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/returns" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Returns Policy — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/returns" }],
   }),
   component: Returns,
 });
@@ -44,7 +55,7 @@ function Returns() {
           <h2 className="font-display font-bold text-xl text-brand">How to Start a Return</h2>
           <ol className="mt-3 text-muted-foreground leading-relaxed space-y-2 list-decimal pl-5">
             <li>
-              <strong>Contact us</strong> within 14 days of delivery via email at{" "}
+              <strong>Contact us</strong> within 30 days of delivery via email at{" "}
               <a href="mailto:aqbeds2822@gmail.com" className="text-brand underline">
                 aqbeds2822@gmail.com
               </a>{" "}

@@ -15,45 +15,50 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { verifyAuth, adminToken } from "@/lib/auth";
 
 // ── Server Functions ────────────────────────────────────────────────────────
-const getAllSessions = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    const sessions = await db.chatMessage.groupBy({
-      by: ["sessionId"],
-      _count: { sessionId: true },
-      _max: { createdAt: true },
-    });
-    const details = await Promise.all(
-      sessions.map(async (s) => {
-        const lastMsg = await db.chatMessage.findFirst({
-          where: { sessionId: s.sessionId },
-          orderBy: { createdAt: "desc" },
-        });
-        const unread = await db.chatMessage.count({
-          where: { sessionId: s.sessionId, isUser: true, isAdmin: false },
-        });
-        return {
-          sessionId: s.sessionId,
-          lastMessage: lastMsg?.content ?? "",
-          lastIsUser: lastMsg?.isUser ?? true,
-          updatedAt: s._max.createdAt?.toISOString() ?? "",
-          count: s._count.sessionId,
-          unread,
-        };
-      }),
-    );
-    return {
-      success: true,
-      sessions: details.sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : -1)),
-    };
-  } catch (err) {
-    return { success: false, sessions: [] };
-  }
-});
+const getAllSessions = createServerFn({ method: "GET" }).handler(
+  async (opts?: { data?: { token?: string } }) => {
+    if (!(await verifyAuth(opts?.data?.token))) return { success: false, sessions: [] };
+    try {
+      const sessions = await db.chatMessage.groupBy({
+        by: ["sessionId"],
+        _count: { sessionId: true },
+        _max: { createdAt: true },
+      });
+      const details = await Promise.all(
+        sessions.map(async (s) => {
+          const lastMsg = await db.chatMessage.findFirst({
+            where: { sessionId: s.sessionId },
+            orderBy: { createdAt: "desc" },
+          });
+          const unread = await db.chatMessage.count({
+            where: { sessionId: s.sessionId, isUser: true, isAdmin: false },
+          });
+          return {
+            sessionId: s.sessionId,
+            lastMessage: lastMsg?.content ?? "",
+            lastIsUser: lastMsg?.isUser ?? true,
+            updatedAt: s._max.createdAt?.toISOString() ?? "",
+            count: s._count.sessionId,
+            unread,
+          };
+        }),
+      );
+      return {
+        success: true,
+        sessions: details.sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : -1)),
+      };
+    } catch (err) {
+      return { success: false, sessions: [] };
+    }
+  },
+);
 
 const getSessionMessages = createServerFn({ method: "GET" }).handler(
   async ({ data }: { data: any }) => {
+    if (!(await verifyAuth(data?.token))) return { success: false, messages: [] };
     try {
       const { sessionId } = z.object({ sessionId: z.string() }).parse(data);
       const messages = await db.chatMessage.findMany({
@@ -69,6 +74,8 @@ const getSessionMessages = createServerFn({ method: "GET" }).handler(
 
 const replyAsAdmin = createServerFn({ method: "POST" }).handler(async ({ data }: { data: any }) => {
   try {
+    const auth = await verifyAuth(data?.token);
+    if (!auth) return { success: false, error: "Unauthorized" };
     const { sessionId, content } = z
       .object({ sessionId: z.string(), content: z.string() })
       .parse(data);
@@ -83,7 +90,6 @@ const replyAsAdmin = createServerFn({ method: "POST" }).handler(async ({ data }:
 
 // ── Route ───────────────────────────────────────────────────────────────────
 export const Route = createFileRoute("/admin/chat")({
-  loader: () => getAllSessions(),
   component: AdminChat,
 });
 
@@ -114,8 +120,7 @@ function timeAgo(iso: string) {
 }
 
 function AdminChat() {
-  const initial = Route.useLoaderData();
-  const [sessions, setSessions] = useState<Session[]>((initial?.sessions as Session[]) ?? []);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSession, setActiveSession] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState("");
@@ -129,8 +134,7 @@ function AdminChat() {
   const refreshSessions = useCallback(async () => {
     setRefreshing(true);
     try {
-      // @ts-ignore
-      const res = await getAllSessions();
+      const res = await getAllSessions({ data: { token: adminToken() } });
       if (res?.success) setSessions(res.sessions as Session[]);
     } finally {
       setRefreshing(false);
@@ -140,13 +144,18 @@ function AdminChat() {
   const loadMessages = useCallback(async (sid: string) => {
     setLoadingMsgs(true);
     try {
-      // @ts-ignore
-      const res = await getSessionMessages({ data: { sessionId: sid } });
+      const res = await getSessionMessages({ data: { sessionId: sid, token: adminToken() } });
       if (res?.success) setMessages(res.messages as Message[]);
     } finally {
       setLoadingMsgs(false);
     }
   }, []);
+
+  // First load of the session list (route loader runs server-side, where the
+  // admin token is unavailable, so sessions are always fetched here).
+  useEffect(() => {
+    refreshSessions();
+  }, [refreshSessions]);
 
   // Poll active session messages every 4s
   useEffect(() => {
@@ -196,7 +205,13 @@ function AdminChat() {
 
     try {
       // @ts-ignore
-      await replyAsAdmin({ data: { sessionId: activeSession, content: text } });
+      await replyAsAdmin({
+        data: {
+          sessionId: activeSession,
+          content: text,
+          token: localStorage.getItem("admin_token") || "",
+        },
+      });
       await loadMessages(activeSession);
     } finally {
       setSending(false);
@@ -208,7 +223,9 @@ function AdminChat() {
   return (
     <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
       {/* ── Sessions Sidebar ── */}
-      <aside className={`w-80 flex-shrink-0 border-r border-white/[0.06] flex flex-col ${showSessions ? "flex" : "hidden"} md:flex`}>
+      <aside
+        className={`w-80 flex-shrink-0 border-r border-white/[0.06] flex flex-col ${showSessions ? "flex" : "hidden"} md:flex`}
+      >
         <div className="px-5 py-5 border-b border-white/[0.06] flex items-center justify-between">
           <div>
             <h1 className="text-base font-bold text-white">Live Chat</h1>
@@ -287,7 +304,9 @@ function AdminChat() {
       )}
 
       {/* ── Chat Area ── */}
-      <div className={`flex-1 flex flex-col min-w-0 ${activeSession && !showSessions ? "flex" : "hidden"} md:flex`}>
+      <div
+        className={`flex-1 flex flex-col min-w-0 ${activeSession && !showSessions ? "flex" : "hidden"} md:flex`}
+      >
         {!activeSession ? (
           <div className="flex-1 flex items-center justify-center flex-col gap-4 text-center px-8">
             <div className="h-16 w-16 rounded-2xl bg-white/[0.04] grid place-items-center mb-2">

@@ -1,31 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import {
-  Search,
-  Package,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Search, Package, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { db } from "@/lib/db";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { verifyAuth, adminToken } from "@/lib/auth";
 
-export const getProducts = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    const products = await db.product.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    });
-    return products;
-  } catch {
-    return [];
-  }
-});
+export const getProducts = createServerFn({ method: "GET" }).handler(
+  async (opts?: { data?: { token?: string } }) => {
+    if (!(await verifyAuth(opts?.data?.token))) return [];
+    try {
+      const products = await db.product.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      });
+      return products;
+    } catch {
+      return [];
+    }
+  },
+);
 
 export const Route = createFileRoute("/admin/products/")({
-  loader: () => getProducts(),
   component: ProductsList,
 });
 
@@ -50,9 +47,23 @@ function StockBadge({ stock }: { stock: number }) {
 }
 
 function ProductsList() {
-  const data = Route.useLoaderData() as any[];
-  const [products, setProducts] = useState<any[]>(data ?? []);
+  const [products, setProducts] = useState<any[]>([]);
   const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    getProducts({ data: { token: adminToken() } })
+      .then((rows) => {
+        if (alive) setProducts(rows ?? []);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const filtered = products.filter(
     (p) =>
@@ -130,7 +141,11 @@ function ProductsList() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Package className="w-10 h-10 text-gray-800 mb-3" />
             <p className="text-gray-600 text-sm">
-              {query ? "No products match your search." : "No products yet."}
+              {loading
+                ? "Loading products…"
+                : query
+                  ? "No products match your search."
+                  : "No products yet."}
             </p>
           </div>
         ) : (
@@ -182,7 +197,11 @@ function ProductsList() {
           <div className="flex flex-col items-center justify-center py-20 text-center" style={card}>
             <Package className="w-10 h-10 text-gray-800 mb-3" />
             <p className="text-gray-600 text-sm">
-              {query ? "No products match your search." : "No products yet."}
+              {loading
+                ? "Loading products…"
+                : query
+                  ? "No products match your search."
+                  : "No products yet."}
             </p>
           </div>
         ) : (

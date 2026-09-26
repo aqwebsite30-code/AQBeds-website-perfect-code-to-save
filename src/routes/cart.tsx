@@ -7,16 +7,28 @@ export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
       { title: "Your Basket — AQ Beds" },
-      { name: "description", content: "Review your AQ Beds basket before checkout. Cash on delivery available across the UK." },
+      {
+        name: "description",
+        content:
+          "Review your AQ Beds basket before checkout. Cash on delivery available across the UK.",
+      },
       { property: "og:title", content: "Your Basket — AQ Beds" },
       { property: "og:description", content: "Review your AQ Beds basket before checkout." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/cart" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Your Basket — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
+      { name: "robots", content: "noindex, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/cart" }],
   }),
   component: CartPage,
 });

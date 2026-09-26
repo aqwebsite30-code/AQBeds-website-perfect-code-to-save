@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Heart, Star, ShoppingBag, ArrowRight } from "lucide-react";
+import { Heart, ShoppingBag, ArrowRight } from "lucide-react";
 import type { Product } from "@/features/products/data/products";
 import { formatGBP } from "@/lib/utils/format";
 import { useWishlist } from "@/features/cart/store/cart";
@@ -88,14 +88,6 @@ export function ProductCard({ product }: { product: Product }) {
 
       {/* Info panel */}
       <div className="p-4 sm:p-5 flex flex-col gap-2">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          <span className="font-semibold tabular-nums text-foreground">
-            {product.rating.toFixed(1)}
-          </span>
-          <span className="text-muted-foreground">· {product.reviews} reviews</span>
-        </div>
-
         <h3 className="font-semibold leading-snug line-clamp-2 group-hover:text-brand transition-colors duration-200 text-sm sm:text-base">
           {product.name}
         </h3>

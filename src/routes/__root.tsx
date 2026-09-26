@@ -95,13 +95,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Premium ottoman, divan, storage beds & luxury sofas handcrafted in the UK. Up to 50% OFF with free UK delivery. Customise your fabric, size & mattress — order online or via WhatsApp.",
+          "Premium ottoman, divan, storage beds & sofas handcrafted in the UK, with a mattress included. Free UK delivery, 30-day returns & 1-year warranty. Customise your fabric, size & mattress — order online or via WhatsApp.",
       },
       { property: "og:title", content: "AQ Beds — Luxury Beds & Sofas | Handcrafted in the UK" },
       {
         property: "og:description",
         content:
-          "Premium ottoman, divan & storage beds with modern comfort. Up to 50% OFF and free delivery on all beds.",
+          "Premium ottoman, divan & storage beds with a mattress included. Free UK delivery, 30-day returns and a 1-year warranty on all beds.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.aqbeds.com" },
@@ -175,7 +175,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <style dangerouslySetInnerHTML={{ __html: `body { opacity: 0; }` }} />
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
@@ -215,7 +214,6 @@ fbq.allowDuplicatePageViews = true;
   );
 }
 
-import { SalesTicker } from "@/components/layout/SalesTicker";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Task 4: Diagnostic Isolation Flags
@@ -438,7 +436,6 @@ function RootComponent() {
       <div
         className={`min-h-screen flex flex-col ${FLAGS.DISABLE_MOTION ? "framer-motion-disabled" : ""}`}
       >
-        {!isAdmin && <SalesTicker />}
         {!isAdmin && <Header />}
 
         <main className={`flex-1 ${!isAdmin ? "pb-20 sm:pb-0" : ""}`}>

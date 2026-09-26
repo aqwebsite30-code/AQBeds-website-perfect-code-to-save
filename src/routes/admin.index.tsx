@@ -23,65 +23,68 @@ import {
 } from "recharts";
 import { db } from "@/lib/db";
 import { seedDatabase } from "@/lib/seed";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { verifyAuth, adminToken } from "@/lib/auth";
 
-export const getDashboardData = createServerFn({ method: "GET" }).handler(async () => {
-  try {
-    if (!process.env.DATABASE_URL) {
-      console.warn("DATABASE_URL is missing. Returning empty dashboard data.");
+export const getDashboardData = createServerFn({ method: "GET" }).handler(
+  async (opts?: { data?: { token?: string } }) => {
+    if (!(await verifyAuth(opts?.data?.token))) return null;
+    try {
+      if (!process.env.DATABASE_URL) {
+        console.warn("DATABASE_URL is missing. Returning empty dashboard data.");
+        return {
+          revenue: 0,
+          activeOrders: 0,
+          avgOrderValue: 0,
+          lowStock: 0,
+          totalProducts: 0,
+          recentOrders: [],
+          chartData: [],
+        };
+      }
+      const [orders, totalRev, lowStock, totalProducts, allOrdersCount] = await Promise.all([
+        db.order.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
+        db.order.aggregate({ _sum: { total: true } }),
+        db.product.count({ where: { stock: { lt: 5 } } }),
+        db.product.count(),
+        db.order.count(),
+      ]);
+
+      const revenue = totalRev?._sum?.total || 0;
+      const avgOrderValue = allOrdersCount > 0 ? revenue / allOrdersCount : 0;
+
+      const chartData = [
+        { name: "Jan", total: 1200 },
+        { name: "Feb", total: 2400 },
+        { name: "Mar", total: 1800 },
+        { name: "Apr", total: 3200 },
+        { name: "May", total: 4100 },
+        { name: "Jun", total: revenue },
+      ];
       return {
-        revenue: 0,
-        activeOrders: 0,
-        avgOrderValue: 0,
-        lowStock: 0,
-        totalProducts: 0,
-        recentOrders: [],
-        chartData: [],
+        revenue,
+        activeOrders: allOrdersCount,
+        avgOrderValue,
+        lowStock,
+        totalProducts,
+        recentOrders: orders.map((o) => ({
+          id: o.id.slice(0, 8),
+          fullId: o.id,
+          customer: o.customerName,
+          amount: `£${o.total.toFixed(2)}`,
+          status: o.status,
+          date: o.createdAt.toLocaleDateString(),
+        })),
+        chartData,
       };
+    } catch (err) {
+      console.error("Dashboard query failed", err);
+      return null;
     }
-    const [orders, totalRev, lowStock, totalProducts, allOrdersCount] = await Promise.all([
-      db.order.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
-      db.order.aggregate({ _sum: { total: true } }),
-      db.product.count({ where: { stock: { lt: 5 } } }),
-      db.product.count(),
-      db.order.count(),
-    ]);
-
-    const revenue = totalRev?._sum?.total || 0;
-    const avgOrderValue = allOrdersCount > 0 ? revenue / allOrdersCount : 0;
-
-    const chartData = [
-      { name: "Jan", total: 1200 },
-      { name: "Feb", total: 2400 },
-      { name: "Mar", total: 1800 },
-      { name: "Apr", total: 3200 },
-      { name: "May", total: 4100 },
-      { name: "Jun", total: revenue },
-    ];
-    return {
-      revenue,
-      activeOrders: allOrdersCount,
-      avgOrderValue,
-      lowStock,
-      totalProducts,
-      recentOrders: orders.map((o) => ({
-        id: o.id.slice(0, 8),
-        fullId: o.id,
-        customer: o.customerName,
-        amount: `£${o.total.toFixed(2)}`,
-        status: o.status,
-        date: o.createdAt.toLocaleDateString(),
-      })),
-      chartData,
-    };
-  } catch (err) {
-    console.error("Dashboard query failed", err);
-    return null;
-  }
-});
+  },
+);
 
 export const Route = createFileRoute("/admin/")({
-  loader: () => getDashboardData(),
   component: AdminDashboard,
 });
 
@@ -136,14 +139,37 @@ function Stat({ title, value, change, trend, Icon, color, bg, delay }: any) {
 }
 
 function AdminDashboard() {
-  const data = Route.useLoaderData();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    getDashboardData({ data: { token: adminToken() } })
+      .then((res) => {
+        if (alive) setData(res);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleSeed = async () => {
     setSeeding(true);
-    await seedDatabase();
+    await seedDatabase({ data: { token: adminToken() } });
     window.location.reload();
   };
+
+  if (loading)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <div className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />
+        <p className="text-gray-500 text-sm mt-4">Loading dashboard…</p>
+      </div>
+    );
 
   if (!data)
     return (

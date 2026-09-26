@@ -10,14 +10,25 @@ export const Route = createFileRoute("/delivery")({
           "Free UK delivery on all AQ Beds. Typical delivery 3-7 business days for beds, 5-10 for sofas. Track your order and choose assembly options.",
       },
       { property: "og:title", content: "Delivery Information — AQ Beds" },
-      { property: "og:description", content: "Free UK delivery on all AQ Beds. Typical delivery 3-7 business days for beds, 5-10 for sofas." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:description",
+        content:
+          "Free UK delivery on all AQ Beds. Typical delivery 3-7 business days for beds, 5-10 for sofas.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/delivery" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Delivery Information — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/delivery" }],
   }),
   component: Delivery,
 });
@@ -98,11 +109,8 @@ function Delivery() {
               You will receive a <strong>2–4 hour time window</strong> on the morning of delivery.
             </li>
             <li>
-              Delivery is <strong>curbside</strong> unless you've arranged a room-of-choice service.
-            </li>
-            <li>
-              Please ensure the <strong>delivery path is clear</strong> — measure doorways and
-              stairwells in advance.
+              Our driver will bring your order <strong>to the room of your choice</strong> where
+              access allows — please measure doorways and stairwells in advance.
             </li>
             <li>
               Our driver will <strong>not remove your old bed</strong> unless pre-arranged. Check

@@ -19,14 +19,25 @@ export const Route = createFileRoute("/shop")({
         content: "Browse our complete collection of luxury beds, mattresses and bedroom furniture.",
       },
       { property: "og:title", content: "Shop All Beds — AQ Beds" },
-      { property: "og:description", content: "Browse our complete collection of luxury beds, mattresses and bedroom furniture at AQ Beds." },
-      { property: "og:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        property: "og:description",
+        content:
+          "Browse our complete collection of luxury beds, mattresses and bedroom furniture at AQ Beds.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
       { property: "og:url", content: "https://www.aqbeds.com/shop" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Shop All Beds — AQ Beds" },
-      { name: "twitter:image", content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp" },
+      {
+        name: "twitter:image",
+        content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
+      },
     ],
+    links: [{ rel: "canonical", href: "https://www.aqbeds.com/shop" }],
   }),
   component: ShopPage,
 });
@@ -56,12 +67,10 @@ function ShopPage() {
   // Only show beds in Shop All
   const bedsOnly = useMemo(() => {
     const staticBeds = PRODUCTS.filter(
-      (p) =>
-        !["wardrobes", "sliding-wardrobes", "sofas", "bedroom-furniture"].includes(p.category),
+      (p) => !["wardrobes", "sliding-wardrobes", "sofas", "bedroom-furniture"].includes(p.category),
     ) as any[];
     const dbBeds = (dbProducts || []).filter(
-      (p) =>
-        !["wardrobes", "sliding-wardrobes", "sofas", "bedroom-furniture"].includes(p.category),
+      (p) => !["wardrobes", "sliding-wardrobes", "sofas", "bedroom-furniture"].includes(p.category),
     );
     return [...dbBeds, ...staticBeds];
   }, [dbProducts]);
@@ -265,7 +274,7 @@ function ShopPage() {
                 </div>
                 <input
                   type="range"
-                  min={200}
+                  min={150}
                   max={1500}
                   step={50}
                   value={maxPrice}
@@ -273,7 +282,7 @@ function ShopPage() {
                   className="w-full accent-brand cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground mt-2">
-                  <span>£200</span>
+                  <span>£150</span>
                   <span>£1,500</span>
                 </div>
               </div>
@@ -299,7 +308,7 @@ function ShopPage() {
             {/* Active filter pills + count */}
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <p className="text-sm font-medium text-muted-foreground mr-2">
-                <span className="text-foreground font-black">{list.length}</span> beds found
+                <span className="text-foreground font-black">{list.length}</span> products found
               </p>
               {search && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold">

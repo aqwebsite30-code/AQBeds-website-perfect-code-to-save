@@ -16,11 +16,13 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { verifyAuth, adminToken } from "@/lib/auth";
 
 export const getSalespersonDetail = createServerFn({ method: "GET" }).handler(
   async ({ data }: { data: any }) => {
+    if (!(await verifyAuth(data?.token))) return null;
     try {
       const { id } = z.object({ id: z.string().min(1) }).parse(data);
 
@@ -127,7 +129,6 @@ export const getSalespersonDetail = createServerFn({ method: "GET" }).handler(
 );
 
 export const Route = createFileRoute("/admin/sales/$id")({
-  loader: ({ params }) => getSalespersonDetail({ data: { id: params.id } }),
   component: AdminSalespersonDetail,
 });
 
@@ -181,14 +182,34 @@ function StatBox({ title, value, Icon, color, bg, delay }: any) {
 }
 
 function AdminSalespersonDetail() {
-  const data = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    getSalespersonDetail({ data: { id, token: adminToken() } })
+      .then((res) => {
+        if (alive) setData(res);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [id]);
 
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-        <p className="text-gray-400 max-w-md">
-          Salesperson not found, or the data could not be loaded.
-        </p>
+        {loading ? (
+          <div className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />
+        ) : (
+          <p className="text-gray-400 max-w-md">
+            Salesperson not found, or the data could not be loaded.
+          </p>
+        )}
         <Link
           to="/admin/sales"
           className="mt-6 px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl transition-all"

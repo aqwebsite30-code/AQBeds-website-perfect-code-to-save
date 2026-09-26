@@ -1,14 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "./db";
 import { PRODUCTS } from "../features/products/data/products";
+import { verifyAuth, unauthorized } from "./auth";
 
-export const seedDatabase = createServerFn({ method: "POST" }).handler(async () => {
+type FnOpts = { data?: { token?: string } };
+
+export const seedDatabase = createServerFn({ method: "POST" }).handler(async (opts?: FnOpts) => {
   try {
     // 1. Create Admin User
     const adminEmail = process.env.ADMIN_EMAIL || "admin@aqbeds.com";
     const adminPassword = process.env.ADMIN_PASSWORD || "123";
 
     const existingAdmin = await db.adminUser.findUnique({ where: { email: adminEmail } });
+
+    // Seeding an existing install is an admin-only action; a fresh database may
+    // bootstrap its first admin without one (otherwise the door locks forever).
+    if (existingAdmin && !(await verifyAuth(opts?.data?.token))) return unauthorized;
+
     if (!existingAdmin) {
       // dynamic import bcrypt
       const bcrypt = await import("bcryptjs");
@@ -34,7 +42,7 @@ export const seedDatabase = createServerFn({ method: "POST" }).handler(async () 
             slug: p.slug,
             description: p.description,
             price: p.basePrice,
-            salePrice: p.onSale ? p.basePrice * 0.8 : null,
+            salePrice: p.onSale ? p.originalPrice : null,
             category: p.category,
             stock: p.stock,
             rating: p.rating,

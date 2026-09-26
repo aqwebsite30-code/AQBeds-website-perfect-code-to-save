@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "./db";
 import { z } from "zod";
+import { verifyAuth } from "./auth";
+
+const unauthorized = { success: false as const, error: "Unauthorized. Please sign in again." };
 
 function slugify(text: string) {
   return text
@@ -12,6 +15,8 @@ function slugify(text: string) {
 export const createProduct = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
     try {
+      const auth = await verifyAuth(data?.token);
+      if (!auth) return unauthorized;
       const { name, description, price, salePrice, stock, sku, category, featured, imageUrls, options } = data;
 
       const slug = slugify(name);
@@ -50,6 +55,8 @@ export const createProduct = createServerFn({ method: "POST" }).handler(
 export const updateProduct = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
     try {
+      const auth = await verifyAuth(data?.token);
+      if (!auth) return unauthorized;
       const { id, name, description, price, salePrice, stock, sku, category, featured, imageUrls, options } = data;
 
       const slug = slugify(name);
@@ -92,6 +99,8 @@ export const updateProduct = createServerFn({ method: "POST" }).handler(
 export const deleteProduct = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: any }) => {
     try {
+      const auth = await verifyAuth(data?.token);
+      if (!auth) return unauthorized;
       const { id } = z.object({ id: z.string() }).parse(data);
       await db.productImage.deleteMany({ where: { productId: id } });
       await db.productVariant.deleteMany({ where: { productId: id } });

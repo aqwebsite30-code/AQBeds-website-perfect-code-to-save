@@ -154,7 +154,7 @@ export function HeroCarousel() {
             className="hidden sm:flex justify-center mb-6"
           >
             <span className="inline-block px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-white/70 text-[10px] sm:text-[11px] font-bold tracking-[0.3em] uppercase">
-              Est. 2018 — Luxury British Craftsmanship
+              Est. 2018 · 10,000+ Beds Delivered Across the UK
             </span>
           </motion.div>
 
@@ -175,9 +175,10 @@ export function HeroCarousel() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="hidden sm:block text-white/50 text-lg sm:text-xl max-w-2xl mx-auto mb-8 font-light leading-relaxed"
+            className="hidden sm:block text-white/60 text-lg sm:text-xl max-w-2xl mx-auto mb-8 font-light leading-relaxed"
           >
-            Handcrafted luxury beds designed for perfect sleep and tailored to your room.
+            Handcrafted ottoman, divan and storage beds — premium fabrics, hidden storage and a
+            mattress included. Free UK delivery, 30-day returns.
           </motion.p>
 
           <motion.div
@@ -191,17 +192,16 @@ export function HeroCarousel() {
               className="group relative h-12 sm:h-14 px-8 sm:px-10 rounded-full bg-white text-[#0B3C5D] font-black text-sm sm:text-base flex items-center gap-2 overflow-hidden transition-all hover:scale-105 active:scale-95 w-full sm:w-auto justify-center shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
             >
               <span className="relative z-10 flex items-center gap-2">
-                Shop Collection
+                Shop All Beds — From £185
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Link>
-            <Link
-              to="/category/$slug"
-              params={{ slug: "ottoman-beds" }}
+            <a
+              href="#bestsellers"
               className="h-12 sm:h-14 px-8 sm:px-10 rounded-full border border-white/20 bg-white/5 backdrop-blur-md text-white font-bold text-sm sm:text-base flex items-center transition-all hover:bg-white/10 active:scale-95 w-full sm:w-auto justify-center"
             >
-              Best Sellers
-            </Link>
+              See Our Best Sellers
+            </a>
           </motion.div>
         </motion.div>
       </div>
