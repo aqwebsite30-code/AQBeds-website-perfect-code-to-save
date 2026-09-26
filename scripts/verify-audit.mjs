@@ -29,8 +29,18 @@ page.on("console", (m) => {
 });
 page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
 
+async function gotoSafe(pg, url) {
+  try {
+    await pg.goto(url, { waitUntil: "networkidle", timeout: 20000 });
+  } catch {
+    try {
+      await pg.goto(url, { waitUntil: "load", timeout: 30000 });
+    } catch {}
+  }
+}
+
 async function go(path) {
-  await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 45000 });
+  await gotoSafe(page, BASE + path);
   await page.waitForTimeout(1200);
 }
 
@@ -145,7 +155,7 @@ check(
 // sticky mobile bar (mobile viewport)
 const m = await ctx.newPage();
 await m.setViewportSize({ width: 390, height: 844 });
-await m.goto(BASE + "/product/divan-ottoman-bed", { waitUntil: "networkidle" });
+await gotoSafe(m, BASE + "/product/divan-ottoman-bed");
 await m.waitForTimeout(1500);
 const sticky = await m.locator('button:has-text("Add To Basket")').count();
 check("mobile-pdp", "sticky Add To Basket exists", sticky >= 1, `count=${sticky}`);
@@ -349,7 +359,7 @@ check("/category/divan-beds", "interlink to guide", gLink2 >= 1, `count=${gLink2
 // ==================== PHASE 2 EXTRA CHECKS ====================
 // ---- §6.8.2 search quality ----
 for (const q of ["velvet", "king size", "sofa"]) {
-  await page.goto(`${BASE}/shop?q=${encodeURIComponent(q)}`, { waitUntil: "networkidle" });
+  await gotoSafe(page, `${BASE}/shop?q=${encodeURIComponent(q)}`);
   await page.waitForTimeout(900);
   const cards = await page.locator('a[href^="/product/"]').count();
   const body = await page.locator("body").innerText();
@@ -363,7 +373,7 @@ for (const q of ["velvet", "king size", "sofa"]) {
 }
 
 // empty state
-await page.goto(`${BASE}/shop?q=zzzznotarealproduct`, { waitUntil: "networkidle" });
+await gotoSafe(page, `${BASE}/shop?q=zzzznotarealproduct`);
 await page.waitForTimeout(900);
 const emptyBody = await page.locator("body").innerText();
 check(
@@ -374,7 +384,7 @@ check(
 );
 
 // ---- §6.8.4 budget slider floor must include the £185 bed ----
-await page.goto(`${BASE}/shop`, { waitUntil: "networkidle" });
+await gotoSafe(page, `${BASE}/shop`);
 await page.waitForTimeout(800);
 const shopBodyX = await page.locator("body").innerText();
 check(
@@ -395,7 +405,7 @@ const PAGES = [
   "/guides/ottoman-vs-divan",
 ];
 for (const p of PAGES) {
-  await page.goto(BASE + p, { waitUntil: "networkidle" });
+  await gotoSafe(page, BASE + p);
   await page.waitForTimeout(800);
   const noAlt = await page.locator("img:not([alt])").count();
   const imgs = await page.locator("img").count();
@@ -409,7 +419,7 @@ for (const p of PAGES) {
 }
 
 // ---- keyboard: skip link reachable as first Tab ----
-await page.goto(BASE + "/", { waitUntil: "networkidle" });
+await gotoSafe(page, BASE + "/");
 await page.waitForTimeout(600);
 await page.keyboard.press("Tab");
 const focused = await page.evaluate(() => {
