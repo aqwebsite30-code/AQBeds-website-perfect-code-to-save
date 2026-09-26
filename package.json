@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "optimize-images": "node scripts/process-images.js",
     "responsive-images": "node scripts/responsive-images.mjs",
-    "check:prices": "node scripts/check-prices.cjs"
+    "check:prices": "node scripts/check-prices.cjs",
+    "verify:audit": "node scripts/verify-audit.mjs"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

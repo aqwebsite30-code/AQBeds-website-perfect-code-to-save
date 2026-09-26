@@ -35,6 +35,7 @@ import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminSalesDashboardRouteImport } from './routes/admin.sales-dashboard'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as GuidesOttomanVsDivanRouteImport } from './routes/guides.ottoman-vs-divan'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
 import { Route as AdminProductsNewRouteImport } from './routes/admin.products.new'
@@ -171,6 +172,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesOttomanVsDivanRoute = GuidesOttomanVsDivanRouteImport.update({
+  id: '/guides/ottoman-vs-divan',
+  path: '/guides/ottoman-vs-divan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
   id: '/product/$slug',
   path: '/product/$slug',
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/admin/sales-dashboard': typeof AdminSalesDashboardRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/guides/ottoman-vs-divan': typeof GuidesOttomanVsDivanRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/new': typeof AdminProductsNewRoute
@@ -254,6 +261,7 @@ export interface FileRoutesByTo {
   '/admin/sales-dashboard': typeof AdminSalesDashboardRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/guides/ottoman-vs-divan': typeof GuidesOttomanVsDivanRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/admin/products/new': typeof AdminProductsNewRoute
@@ -288,6 +296,7 @@ export interface FileRoutesById {
   '/admin/sales-dashboard': typeof AdminSalesDashboardRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/guides/ottoman-vs-divan': typeof GuidesOttomanVsDivanRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/products/new': typeof AdminProductsNewRoute
@@ -323,6 +332,7 @@ export interface FileRouteTypes {
     | '/admin/sales-dashboard'
     | '/admin/settings'
     | '/category/$slug'
+    | '/guides/ottoman-vs-divan'
     | '/product/$slug'
     | '/admin/'
     | '/admin/products/new'
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
     | '/admin/sales-dashboard'
     | '/admin/settings'
     | '/category/$slug'
+    | '/guides/ottoman-vs-divan'
     | '/product/$slug'
     | '/admin'
     | '/admin/products/new'
@@ -387,6 +398,7 @@ export interface FileRouteTypes {
     | '/admin/sales-dashboard'
     | '/admin/settings'
     | '/category/$slug'
+    | '/guides/ottoman-vs-divan'
     | '/product/$slug'
     | '/admin/'
     | '/admin/products/new'
@@ -414,6 +426,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
+  GuidesOttomanVsDivanRoute: typeof GuidesOttomanVsDivanRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
@@ -601,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/ottoman-vs-divan': {
+      id: '/guides/ottoman-vs-divan'
+      path: '/guides/ottoman-vs-divan'
+      fullPath: '/guides/ottoman-vs-divan'
+      preLoaderRoute: typeof GuidesOttomanVsDivanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$slug': {
       id: '/product/$slug'
       path: '/product/$slug'
@@ -710,6 +730,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
+  GuidesOttomanVsDivanRoute: GuidesOttomanVsDivanRoute,
   ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport

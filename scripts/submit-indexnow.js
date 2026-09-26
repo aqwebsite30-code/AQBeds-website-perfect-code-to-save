@@ -1,31 +1,35 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 const apiKey = "67893aa8cdc24e918a97e93a1f5c7256";
 const host = "https://www.aqbeds.com";
 
-const urls = [
-  `${host}/`,
-  `${host}/shop`,
-  `${host}/about`,
-  `${host}/contact`,
-  `${host}/faqs`,
-  `${host}/returns`,
-  `${host}/delivery`,
-  `${host}/search`,
-  `${host}/wishlist`,
-  `${host}/cart`,
-  `${host}/category/ottoman-beds`,
-  `${host}/category/divan-beds`,
-  `${host}/category/storage-beds`,
-  `${host}/category/single-beds`,
-  `${host}/category/double-beds`,
-  `${host}/category/kingsize-beds`,
-  `${host}/category/superking-beds`,
-  `${host}/category/sofas`,
-  `${host}/category/mattresses`,
-  `${host}/category/headboards`,
-];
+const here = path.dirname(fileURLToPath(import.meta.url));
+
+function urlsFromSitemap() {
+  try {
+    const xml = fs.readFileSync(path.join(here, "..", "public", "sitemap.xml"), "utf8");
+    const found = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    if (found.length) return found;
+    console.error("IndexNow: no <loc> entries found in sitemap.xml");
+  } catch (err) {
+    console.error("IndexNow: could not read sitemap.xml:", err.message);
+  }
+  // fallback: the pages that must always be submitted
+  return [`${host}/`, `${host}/shop`, `${host}/faqs`, `${host}/contact`];
+}
 
 async function submitIndexNow() {
-  const body = { host: host.replace("https://", ""), key: apiKey, keyLocation: `${host}/${apiKey}.txt`, urlList: urls };
+  const urlList = urlsFromSitemap();
+  const body = {
+    host: host.replace("https://", ""),
+    key: apiKey,
+    keyLocation: `${host}/${apiKey}.txt`,
+    urlList,
+  };
+
+  console.log(`IndexNow: submitting ${urlList.length} URLs from sitemap`);
 
   try {
     const res = await fetch("https://api.indexnow.org/indexnow", {

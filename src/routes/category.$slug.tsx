@@ -1,9 +1,16 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { CATEGORIES, type Category, getByCategory } from "@/features/products/data/products";
 import { getDbProducts } from "@/lib/products";
 import { responsiveSrc } from "@/lib/responsive-image";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { motion } from "framer-motion";
+
+// Buying-guide interlinks for the storage-bed family (§7.3)
+const GUIDE_LINKS: Record<string, string> = {
+  "ottoman-beds": "Ottoman vs divan — how to choose →",
+  "divan-beds": "Ottoman vs divan — how to choose →",
+  "storage-beds": "Ottoman vs divan — how to choose →",
+};
 
 export const Route = createFileRoute("/category/$slug")({
   loader: async ({ params }) => {
@@ -129,6 +136,14 @@ function CategoryPage() {
             <p className="mt-4 text-sm sm:text-lg text-white/70 max-w-3xl font-light leading-relaxed">
               {category.intro || category.blurb}
             </p>
+            {GUIDE_LINKS[category.slug] && (
+              <Link
+                to="/guides/ottoman-vs-divan"
+                className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-white border-b border-white/40 pb-0.5 hover:border-white transition-colors"
+              >
+                {GUIDE_LINKS[category.slug]}
+              </Link>
+            )}
           </motion.div>
         </div>
       </section>
