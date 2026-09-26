@@ -16,6 +16,14 @@ function formatPrice(price) {
   return price.toFixed(2) + " GBP";
 }
 
+// Meta feed URLs must be fetchable: raw spaces (e.g. "/all products img/...")
+// break image_link/ additional_image_link retrieval. Spaces only, so already
+// encoded sequences ("%20") are never double-encoded.
+function encodeUrl(url) {
+  if (!url) return "";
+  return String(url).replace(/ /g, "%20");
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -69,8 +77,9 @@ export default async function handler(req, res) {
         images = normalizeImages(p.images);
       }
 
-      const mainImage = images[0] || "";
-      const additionalImages = images.slice(1, 11).join(",");
+      const mainImage = encodeUrl(images[0]);
+      const additionalImageList = images.slice(1, 11).map((img) => encodeUrl(img));
+      const additionalImages = additionalImageList.join(",");
 
       // DB product: { price, salePrice } — static fallback: { basePrice, originalPrice }
       const isDb = typeof p.price === "number";
@@ -99,7 +108,10 @@ export default async function handler(req, res) {
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800");
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+    );
     res.statusCode = 200;
     return res.end(csv);
   } catch (err) {
