@@ -1,28 +1,68 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useRef } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo, useRef, useState } from "react";
 import { PRODUCTS, searchProducts } from "@/features/products/data/products";
 import { getDbProducts } from "@/lib/products";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { SlidersHorizontal, X, ChevronDown, Search } from "lucide-react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+
+type Sort = "featured" | "low" | "high";
+type FilterKey = "cat" | "size" | "mattress";
+
+type ShopSearch = {
+  q?: string;
+  cat?: string[];
+  size?: string[];
+  mattress?: string[];
+  max?: number;
+  sort?: Sort;
+};
+
+const asList = (v: unknown): string[] =>
+  v === undefined || v === null ? [] : Array.isArray(v) ? v.map(String) : [String(v)];
+
+const sentence = (s: string) => s.replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase());
+
+// Size options are written "5ft King Size - With Mattress" → split into a size
+// facet and a mattress facet (WP-C)
+const parseSize = (name: string) => {
+  const m = /^(.*?)\s*[-–—]\s*(With Mattress|No Mattress)$/.exec(name);
+  return m
+    ? { base: m[1], inclusion: m[2] as "With Mattress" | "No Mattress" }
+    : { base: name, inclusion: null as null | "With Mattress" | "No Mattress" };
+};
 
 export const Route = createFileRoute("/shop")({
   loader: async () => {
     const dbProducts = await getDbProducts();
     return { dbProducts };
   },
+  validateSearch: (s: Record<string, unknown>): ShopSearch => ({
+    q: typeof s.q === "string" && s.q.trim() ? s.q : undefined,
+    cat: asList(s.cat),
+    size: asList(s.size),
+    mattress: asList(s.mattress),
+    max:
+      typeof s.max === "number" && Number.isFinite(s.max)
+        ? s.max
+        : typeof s.max === "string" && Number(s.max)
+          ? Number(s.max)
+          : undefined,
+    sort: s.sort === "low" || s.sort === "high" ? s.sort : "featured",
+  }),
   head: () => ({
     meta: [
-      { title: "Shop All Beds — AQ Beds" },
+      { title: "Shop Beds, Sofas & Wardrobes | AQ Beds" },
       {
         name: "description",
-        content: "Browse our complete collection of luxury beds, mattresses and bedroom furniture.",
+        content:
+          "Browse every AQ Beds product — ottoman, divan and storage beds, velvet sofas, sofa beds and wardrobes. Free UK delivery, 30-day returns.",
       },
-      { property: "og:title", content: "Shop All Beds — AQ Beds" },
+      { property: "og:title", content: "Shop Beds, Sofas & Wardrobes | AQ Beds" },
       {
         property: "og:description",
         content:
-          "Browse our complete collection of luxury beds, mattresses and bedroom furniture at AQ Beds.",
+          "Browse every AQ Beds product — ottoman, divan and storage beds, velvet sofas, sofa beds and wardrobes. Free UK delivery, 30-day returns.",
       },
       {
         property: "og:image",
@@ -31,7 +71,7 @@ export const Route = createFileRoute("/shop")({
       { property: "og:url", content: "https://www.aqbeds.com/shop" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Shop All Beds — AQ Beds" },
+      { name: "twitter:title", content: "Shop Beds, Sofas & Wardrobes | AQ Beds" },
       {
         name: "twitter:image",
         content: "https://www.aqbeds.com/Home%20page%20images/1000152185-clean.webp",
@@ -44,84 +84,117 @@ export const Route = createFileRoute("/shop")({
 
 function ShopPage() {
   const { dbProducts } = Route.useLoaderData();
-  const [maxPrice, setMaxPrice] = useState(1500);
-  const [sort, setSort] = useState<"featured" | "low" | "high">("featured");
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const [showFilters, setShowFilters] = useState(false);
-  const [search, setSearch] = useState("");
-  const [selectedCats, setSelectedCats] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+
+  const cat = useMemo(() => search.cat ?? [], [search.cat]);
+  const size = useMemo(() => search.size ?? [], [search.size]);
+  const mattress = useMemo(() => search.mattress ?? [], [search.mattress]);
+  const sort: Sort = search.sort ?? "featured";
 
   const headerRef = useRef<HTMLDivElement>(null);
   const inView = useInView(headerRef, { once: true });
 
-  const toggleCat = (cat: string) =>
-    setSelectedCats((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
-    );
-
-  const toggleSize = (size: string) =>
-    setSelectedSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size],
-    );
-
-  // Only show beds in Shop All
-  const bedsOnly = useMemo(() => {
-    const staticBeds = PRODUCTS.filter(
-      (p) => !["wardrobes", "sliding-wardrobes", "sofas", "bedroom-furniture"].includes(p.category),
-    ) as any[];
-    const dbBeds = (dbProducts || []).filter(
-      (p) => !["wardrobes", "sliding-wardrobes", "sofas", "bedroom-furniture"].includes(p.category),
-    );
-    return [...dbBeds, ...staticBeds];
+  // Every product on the site — the shop is the full catalogue (WP-C)
+  const catalogue = useMemo(() => {
+    const staticProducts = PRODUCTS as any[];
+    const dbList = (dbProducts || []) as any[];
+    return [...dbList, ...staticProducts];
   }, [dbProducts]);
 
-  // Dynamic Filters (Priority 8)
-  const dynamicCategories = useMemo(
-    () => Array.from(new Set(bedsOnly.map((p) => p.category))),
-    [bedsOnly],
+  const priceBounds = useMemo(() => {
+    const prices = catalogue.map((p) => p.basePrice).filter((n) => typeof n === "number");
+    const lo = prices.length ? Math.min(...prices) : 0;
+    const hi = prices.length ? Math.max(...prices) : 1000;
+    return { lo, hi: Math.ceil(hi / 50) * 50 };
+  }, [catalogue]);
+
+  const maxPrice = Math.min(search.max ?? priceBounds.hi, priceBounds.hi);
+
+  const categoryFacet = useMemo(() => {
+    const counts = new Map<string, number>();
+    catalogue.forEach((p) => counts.set(p.category, (counts.get(p.category) || 0) + 1));
+    return Array.from(counts, ([slug, count]) => ({ slug, count })).sort(
+      (a, b) => b.count - a.count,
+    );
+  }, [catalogue]);
+
+  // Size facet: bed and sofa sizes only. Wardrobe "sizes" are door configurations
+  // ("2 Door Plain Wardrobe") and sliding widths, so those categories are excluded;
+  // values with no digit ("Double Metal Bunk Bed") are product names, not sizes.
+  const sizeFacet = useMemo(() => {
+    const skip = new Set(["wardrobes", "sliding-wardrobes", "bedroom-furniture"]);
+    const set = new Set<string>();
+    catalogue
+      .filter((p) => !skip.has(p.category))
+      .forEach((p) =>
+        p.sizes?.forEach((s: any) => {
+          const base = parseSize(s.name).base;
+          if (/\d/.test(base)) set.add(base);
+        }),
+      );
+    return Array.from(set).sort();
+  }, [catalogue]);
+
+  const hasMattressOptions = useMemo(
+    () => catalogue.some((p) => p.sizes?.some((s: any) => parseSize(s.name).inclusion)),
+    [catalogue],
   );
-  const dynamicSizes = useMemo(() => {
-    const s = new Set<string>();
-    bedsOnly.forEach((p) => p.sizes?.forEach((sz) => s.add(sz.name)));
-    return Array.from(s).sort();
-  }, [bedsOnly]);
+  const mattressFacet = ["With Mattress", "No Mattress"];
 
   const list = useMemo(() => {
-    let filtered = bedsOnly;
+    let filtered = catalogue;
 
-    // Search bar (Priority 1 — covers sizes and keywords)
-    if (search.trim()) {
-      // searchProducts returns all products, so filter down to bedsOnly again
-      const searchResults = searchProducts(search);
-      filtered = searchResults.filter(
-        (p) =>
-          !["wardrobes", "sliding-wardrobes", "sofas", "bedroom-furniture"].includes(p.category),
-      );
+    if (search.q) {
+      const results = searchProducts(search.q);
+      const allowed = new Set(catalogue.map((p) => p.id));
+      filtered = results.filter((p) => allowed.has(p.id));
     }
 
-    // Secondary Filters (Price)
     filtered = filtered.filter((p) => p.basePrice <= maxPrice);
 
-    // Dynamic Category sidebar filter
-    if (selectedCats.length > 0) {
-      filtered = filtered.filter((p) => selectedCats.includes(p.category));
-    }
+    if (cat.length) filtered = filtered.filter((p) => cat.includes(p.category));
 
-    // Dynamic Size sidebar filter
-    if (selectedSizes.length > 0) {
-      filtered = filtered.filter((p) => p.sizes?.some((sz) => selectedSizes.includes(sz.name)));
-    }
+    if (size.length)
+      filtered = filtered.filter((p) =>
+        p.sizes?.some((s: any) => size.includes(parseSize(s.name).base)),
+      );
+
+    if (mattress.length)
+      filtered = filtered.filter((p) =>
+        p.sizes?.some((s: any) => {
+          const inc = parseSize(s.name).inclusion;
+          return inc ? mattress.includes(inc) : false;
+        }),
+      );
 
     if (sort === "low") return [...filtered].sort((a, b) => a.basePrice - b.basePrice);
     if (sort === "high") return [...filtered].sort((a, b) => b.basePrice - a.basePrice);
     return filtered;
-  }, [maxPrice, sort, search, selectedCats, selectedSizes]);
+  }, [catalogue, search.q, cat, size, mattress, sort, maxPrice]);
 
   const hasActiveFilters =
-    selectedCats.length > 0 ||
-    selectedSizes.length > 0 ||
-    search.trim().length > 0 ||
-    maxPrice < 1500;
+    cat.length > 0 ||
+    size.length > 0 ||
+    mattress.length > 0 ||
+    !!search.q ||
+    maxPrice < priceBounds.hi;
+
+  const update = (patch: Partial<ShopSearch>) =>
+    navigate({ search: { ...search, ...patch }, replace: true });
+
+  const toggleIn = (key: FilterKey, value: string) => {
+    const current = search[key] ?? [];
+    const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+    update({ [key]: next } as Partial<ShopSearch>);
+  };
+
+  const clearAll = () =>
+    navigate({
+      search: { cat: [], size: [], mattress: [], max: undefined, q: undefined },
+      replace: true,
+    });
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,11 +211,11 @@ function ShopPage() {
               Premium Collection
             </span>
             <h1 className="font-display font-black text-5xl sm:text-7xl tracking-tighter leading-none mb-6">
-              Shop All Beds
+              Shop All Products
             </h1>
             <p className="text-white/50 text-lg max-w-xl font-light leading-relaxed">
-              Discover British craftsmanship at its finest. Search by size, category, or style to
-              find your perfect bed.
+              Beds, sofas and wardrobes, all in one place. Search by size, category or fabric to
+              find what fits your room.
             </p>
           </motion.div>
         </div>
@@ -156,13 +229,14 @@ function ShopPage() {
             <input
               type="search"
               placeholder='Try "King Size", "Ottoman", "Small Double"…'
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={search.q ?? ""}
+              onChange={(e) => update({ q: e.target.value || undefined })}
               className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-10 rounded-2xl border border-border bg-card text-sm focus:outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all duration-300"
             />
-            {search && (
+            {search.q && (
               <button
-                onClick={() => setSearch("")}
+                onClick={() => update({ q: undefined })}
+                aria-label="Clear search"
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="h-3.5 w-3.5" />
@@ -170,21 +244,25 @@ function ShopPage() {
             )}
           </div>
           <button
-            onClick={() => setShowFilters((v) => !v)}
+            onClick={() => setShowFilters((v: boolean) => !v)}
             className="lg:hidden inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border border-border bg-card text-sm font-bold active:scale-95 transition-all"
           >
             <SlidersHorizontal className="h-4 w-4" />
             Filters {hasActiveFilters && <span className="h-2 w-2 rounded-full bg-brand" />}
           </button>
           <div className="relative min-w-[160px] sm:min-w-[180px]">
+            <label htmlFor="shop-sort" className="sr-only">
+              Sort products
+            </label>
             <select
+              id="shop-sort"
               value={sort}
-              onChange={(e) => setSort(e.target.value as typeof sort)}
+              onChange={(e) => update({ sort: e.target.value as Sort })}
               className="w-full h-12 sm:h-14 rounded-2xl border border-border bg-card px-4 sm:px-5 pr-10 text-sm font-semibold appearance-none cursor-pointer focus:outline-none focus:ring-4 focus:ring-brand/5 transition-all duration-300"
             >
-              <option value="featured">Most Popular</option>
-              <option value="low">Price: Low to High</option>
-              <option value="high">Price: High to Low</option>
+              <option value="featured">Most popular</option>
+              <option value="low">Price: low to high</option>
+              <option value="high">Price: high to low</option>
             </select>
             <ChevronDown className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
@@ -203,6 +281,7 @@ function ShopPage() {
                   <h2 className="text-2xl font-black">Filters</h2>
                   <button
                     onClick={() => setShowFilters(false)}
+                    aria-label="Close filters"
                     className="p-2.5 rounded-full bg-muted hover:bg-muted/80 transition-colors"
                   >
                     <X className="h-5 w-5" />
@@ -212,23 +291,25 @@ function ShopPage() {
 
               {/* Category Filter */}
               <div className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="font-display font-bold text-xs mb-4 text-foreground/60 uppercase tracking-widest">
-                  Category
-                </h3>
+                <h3 className="font-display font-bold text-sm mb-4 text-foreground/70">Category</h3>
                 <ul className="space-y-2.5">
-                  {dynamicCategories.map((cat) => (
-                    <li key={cat}>
+                  {categoryFacet.map(({ slug, count }) => (
+                    <li key={slug}>
                       <label className="flex items-center gap-3 text-sm cursor-pointer group">
                         <input
                           type="checkbox"
-                          checked={selectedCats.includes(cat)}
-                          onChange={() => toggleCat(cat)}
+                          checked={cat.includes(slug)}
+                          onChange={() => toggleIn("cat", slug)}
                           className="rounded accent-brand w-4 h-4 cursor-pointer"
                         />
                         <span
-                          className={`transition-colors capitalize ${selectedCats.includes(cat) ? "text-brand font-bold" : "text-muted-foreground group-hover:text-foreground"}`}
+                          className={`transition-colors ${
+                            cat.includes(slug)
+                              ? "text-brand font-bold"
+                              : "text-muted-foreground group-hover:text-foreground"
+                          }`}
                         >
-                          {cat.replace(/-/g, " ")}
+                          {sentence(slug)} <span className="text-xs opacity-60">({count})</span>
                         </span>
                       </label>
                     </li>
@@ -237,67 +318,105 @@ function ShopPage() {
               </div>
 
               {/* Size Filter */}
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="font-display font-bold text-xs mb-4 text-foreground/60 uppercase tracking-widest">
-                  Bed Size
-                </h3>
-                <ul className="space-y-2.5">
-                  {dynamicSizes.map((sz) => (
-                    <li key={sz}>
-                      <label className="flex items-center gap-3 text-sm cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={selectedSizes.includes(sz)}
-                          onChange={() => toggleSize(sz)}
-                          className="rounded accent-brand w-4 h-4 cursor-pointer"
-                        />
-                        <span
-                          className={`transition-colors ${selectedSizes.includes(sz) ? "text-brand font-bold" : "text-muted-foreground group-hover:text-foreground"}`}
-                        >
-                          {sz}
-                        </span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {sizeFacet.length > 0 && (
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <div className="flex items-baseline justify-between mb-4">
+                    <h3 className="font-display font-bold text-sm text-foreground/70">Size</h3>
+                    <a href="/size-guide" className="text-[11px] text-brand underline">
+                      Size guide
+                    </a>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {sizeFacet.map((sz) => (
+                      <li key={sz}>
+                        <label className="flex items-center gap-3 text-sm cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={size.includes(sz)}
+                            onChange={() => toggleIn("size", sz)}
+                            className="rounded accent-brand w-4 h-4 cursor-pointer"
+                          />
+                          <span
+                            className={`transition-colors ${
+                              size.includes(sz)
+                                ? "text-brand font-bold"
+                                : "text-muted-foreground group-hover:text-foreground"
+                            }`}
+                          >
+                            {sz}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Mattress Filter (split out of the size list) */}
+              {hasMattressOptions && sizeFacet.length > 0 && (
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="font-display font-bold text-sm mb-4 text-foreground/70">
+                    Mattress
+                  </h3>
+                  <ul className="space-y-2.5">
+                    {mattressFacet.map((inc) => (
+                      <li key={inc}>
+                        <label className="flex items-center gap-3 text-sm cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={mattress.includes(inc)}
+                            onChange={() => toggleIn("mattress", inc)}
+                            className="rounded accent-brand w-4 h-4 cursor-pointer"
+                          />
+                          <span
+                            className={`transition-colors ${
+                              mattress.includes(inc)
+                                ? "text-brand font-bold"
+                                : "text-muted-foreground group-hover:text-foreground"
+                            }`}
+                          >
+                            {inc === "With Mattress" ? "With mattress" : "No mattress"}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Price Range */}
               <div className="rounded-2xl border border-border bg-card p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-display font-bold text-xs text-foreground/60 uppercase tracking-widest">
-                    Budget
-                  </h3>
+                  <h3 className="font-display font-bold text-sm text-foreground/70">Budget</h3>
                   <span className="text-xs font-black text-brand bg-brand/10 px-2 py-1 rounded-lg">
                     Up to £{maxPrice}
                   </span>
                 </div>
+                <label htmlFor="shop-budget" className="sr-only">
+                  Maximum price
+                </label>
                 <input
+                  id="shop-budget"
                   type="range"
-                  min={150}
-                  max={1500}
-                  step={50}
+                  min={priceBounds.lo}
+                  max={priceBounds.hi}
+                  step={10}
                   value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  onChange={(e) => update({ max: Number(e.target.value) })}
                   className="w-full accent-brand cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground mt-2">
-                  <span>£150</span>
-                  <span>£1,500</span>
+                  <span>£{priceBounds.lo}</span>
+                  <span>£{priceBounds.hi}</span>
                 </div>
               </div>
 
               {hasActiveFilters && (
                 <button
-                  onClick={() => {
-                    setSelectedCats([]);
-                    setSelectedSizes([]);
-                    setMaxPrice(1500);
-                    setSearch("");
-                  }}
+                  onClick={clearAll}
                   className="w-full py-3 text-xs font-bold text-muted-foreground hover:text-brand transition-colors uppercase tracking-widest border border-dashed border-border rounded-2xl"
                 >
-                  Clear All Filters
+                  Clear all filters
                 </button>
               )}
             </div>
@@ -308,32 +427,42 @@ function ShopPage() {
             {/* Active filter pills + count */}
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <p className="text-sm font-medium text-muted-foreground mr-2">
-                <span className="text-foreground font-black">{list.length}</span> products found
+                <span className="text-foreground font-black">{list.length}</span> product
+                {list.length === 1 ? "" : "s"} found
               </p>
-              {search && (
+              {search.q && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold">
-                  "{search}"
-                  <button onClick={() => setSearch("")}>
+                  "{search.q}"
+                  <button onClick={() => update({ q: undefined })} aria-label="Clear search term">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
               )}
-              {selectedCats.map((c) => (
+              {cat.map((c) => (
                 <button
                   key={c}
-                  onClick={() => toggleCat(c)}
-                  className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 text-xs font-bold flex items-center gap-1 hover:bg-indigo-500/20 transition-all"
+                  onClick={() => toggleIn("cat", c)}
+                  className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 text-xs font-bold flex items-center gap-1 hover:bg-indigo-500/20 transition-all"
                 >
-                  {c.replace(/-/g, " ")} <X className="h-2.5 w-2.5" />
+                  {sentence(c)} <X className="h-2.5 w-2.5" />
                 </button>
               ))}
-              {selectedSizes.map((s) => (
+              {size.map((s) => (
                 <button
                   key={s}
-                  onClick={() => toggleSize(s)}
+                  onClick={() => toggleIn("size", s)}
                   className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold flex items-center gap-1 hover:bg-emerald-500/20 transition-all"
                 >
                   {s} <X className="h-2.5 w-2.5" />
+                </button>
+              ))}
+              {mattress.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => toggleIn("mattress", m)}
+                  className="px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 text-xs font-bold flex items-center gap-1 hover:bg-sky-500/20 transition-all"
+                >
+                  {m} <X className="h-2.5 w-2.5" />
                 </button>
               ))}
             </div>
@@ -341,20 +470,15 @@ function ShopPage() {
             {list.length === 0 ? (
               <div className="text-center py-24 bg-card rounded-3xl border border-dashed border-border">
                 <div className="text-5xl mb-4">🛋️</div>
-                <h3 className="font-display font-black text-xl">No beds found</h3>
+                <h3 className="font-display font-black text-xl">No products found</h3>
                 <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
                   Try a different size, category, or reset your filters.
                 </p>
                 <button
-                  onClick={() => {
-                    setMaxPrice(1500);
-                    setSearch("");
-                    setSelectedCats([]);
-                    setSelectedSizes([]);
-                  }}
+                  onClick={clearAll}
                   className="mt-6 h-11 px-7 rounded-2xl bg-brand text-brand-foreground font-black text-sm hover:scale-105 active:scale-95 transition-all"
                 >
-                  Show All Beds
+                  Show all products
                 </button>
               </div>
             ) : (

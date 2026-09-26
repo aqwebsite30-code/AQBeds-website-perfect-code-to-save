@@ -56,8 +56,8 @@ function Returns() {
           <ol className="mt-3 text-muted-foreground leading-relaxed space-y-2 list-decimal pl-5">
             <li>
               <strong>Contact us</strong> within 30 days of delivery via email at{" "}
-              <a href="mailto:aqbeds2822@gmail.com" className="text-brand underline">
-                aqbeds2822@gmail.com
+              <a href="mailto:info@aqbeds.com" className="text-brand underline">
+                info@aqbeds.com
               </a>{" "}
               or WhatsApp.
             </li>
@@ -82,8 +82,9 @@ function Returns() {
           <h2 className="font-display font-bold text-xl text-brand">Exclusions</h2>
           <p className="mt-3 text-muted-foreground leading-relaxed">
             <strong>Custom or made-to-order items</strong> (including bespoke sizes, non-standard
-            fabrics, and personalised beds) are <strong>non-returnable</strong> unless faulty. We
-            recommend ordering fabric swatches before committing to a custom piece.
+            fabrics, and personalised beds) are <strong>non-returnable</strong> unless faulty. Beds
+            configured from our standard fabrics and the listed sizes on this site are covered by
+            the 30-day policy above.
           </p>
         </div>
 

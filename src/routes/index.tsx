@@ -2,9 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useMotionValue, useTransform, useSpring, useInView } from "framer-motion";
 import { CATEGORIES, PRODUCTS } from "@/features/products/data/products";
 import { ProductCard } from "@/features/products/components/ProductCard";
+import { responsiveSrc } from "@/lib/responsive-image";
+import { TESTIMONIALS } from "@/features/home/data/testimonials";
 import { HeroCarousel } from "@/components/ui/HeroCarousel";
 import { ArrowRight, Truck, MessageCircle, Award, ShieldCheck, Wallet } from "lucide-react";
 import React, { useRef, lazy, Suspense, useState, useEffect } from "react";
+
+const HOME_CATEGORIES = CATEGORIES.filter((c) => c.slug !== "all-beds" && !c.noindex).slice(0, 10);
+const HOME_CATEGORY_COUNT = 1 + HOME_CATEGORIES.length;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -129,56 +134,7 @@ function Home() {
     .filter(Boolean) as typeof PRODUCTS;
   const disableHero = typeof window !== "undefined" && (window as any).__AQ_FLAGS?.DISABLE_HERO;
 
-  const reviews = [
-    {
-      name: "Sarah Jenkins",
-      city: "London",
-      product: "Aurora Ottoman Bed",
-      comment:
-        "The Aurora Ottoman bed is a game changer! The storage is huge and the plush velvet feels so premium. Delivery was super fast too.",
-      rating: 5,
-    },
-    {
-      name: "David Thompson",
-      city: "Manchester",
-      product: "Divan Bed with Mattress",
-      comment:
-        "Best sleep I've had in years. The mattress we added is perfect. Great quality bed frame and very sturdy. Highly recommend!",
-      rating: 5,
-    },
-    {
-      name: "Emma Wilson",
-      city: "Birmingham",
-      product: "Luxury Ambessador Bed",
-      comment:
-        "I was hesitant to buy a bed online but AQ Beds exceeded my expectations. The color is exactly like the pictures and it looks beautiful in my room.",
-      rating: 5,
-    },
-    {
-      name: "James Miller",
-      city: "Leeds",
-      product: "Ottoman Storage Bed",
-      comment:
-        "Incredible quality for the price. The hydraulic lift on the ottoman bed is so smooth. This is my second purchase from them!",
-      rating: 5,
-    },
-    {
-      name: "Chloe Davies",
-      city: "Bristol",
-      product: "Wingback Bed",
-      comment:
-        "Fast delivery and great communication. The assembly was straightforward and the bed looks much more expensive than it was.",
-      rating: 5,
-    },
-    {
-      name: "Noah Smith",
-      city: "Glasgow",
-      product: "Panel Line Divan",
-      comment:
-        "Finally found a bed that doesn't creak! Super solid frame and the fabric is top notch. 10/10 service.",
-      rating: 5,
-    },
-  ];
+  const reviews = TESTIMONIALS;
 
   return (
     <div className="overflow-x-hidden">
@@ -233,7 +189,7 @@ function Home() {
             to="/shop"
             className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-brand hover:gap-3 transition-all group"
           >
-            Shop All 8 Categories{" "}
+            Shop All {HOME_CATEGORY_COUNT} Categories{" "}
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </Reveal>
@@ -249,6 +205,10 @@ function Home() {
               <div className="absolute inset-0">
                 <img
                   src={CATEGORIES.find((c) => c.slug === "all-beds")?.image}
+                  srcSet={
+                    responsiveSrc(CATEGORIES.find((c) => c.slug === "all-beds")?.image ?? "").srcSet
+                  }
+                  sizes="(min-width: 768px) 50vw, 100vw"
                   alt="All Beds"
                   className="h-full w-full object-cover transition-transform duration-700 md:group-hover:scale-110"
                   loading="lazy"
@@ -269,43 +229,42 @@ function Home() {
           </Reveal>
 
           {/* Other Categories - Use a more attractive 4:5 aspect ratio on mobile instead of square */}
-          {CATEGORIES.filter((c) => c.slug !== "all-beds" && !c.noindex)
-            .slice(0, 10)
-            .map((c, i) => {
-              const content = (
-                <Link
-                  to="/category/$slug"
-                  params={{ slug: c.slug }}
-                  className="group relative overflow-hidden rounded-2xl sm:rounded-3xl block aspect-[4/5] sm:aspect-square cursor-pointer active:scale-[0.98] transition-transform tap-highlight-transparent bg-muted"
-                >
-                  <div className="absolute inset-0">
-                    <img
-                      src={c.image}
-                      alt={c.name}
-                      className="h-full w-full object-cover transition-transform duration-700 md:group-hover:scale-110"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 text-white">
-                    <h3 className="font-display font-bold text-base sm:text-xl">{c.name}</h3>
-                    <p className="hidden sm:block text-[10px] sm:text-xs text-white/70 mt-1 opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-300">
-                      {c.blurb}
-                    </p>
-                  </div>
-                </Link>
-              );
-              return (
-                <React.Fragment key={c.slug}>
-                  <div className="hidden md:block">
-                    <Reveal delay={(i + 1) * 0.05} className="h-full">
-                      {content}
-                    </Reveal>
-                  </div>
-                  <div className="block md:hidden">{content}</div>
-                </React.Fragment>
-              );
-            })}
+          {HOME_CATEGORIES.map((c, i) => {
+            const content = (
+              <Link
+                to="/category/$slug"
+                params={{ slug: c.slug }}
+                className="group relative overflow-hidden rounded-2xl sm:rounded-3xl block aspect-[4/5] sm:aspect-square cursor-pointer active:scale-[0.98] transition-transform tap-highlight-transparent bg-muted"
+              >
+                <div className="absolute inset-0">
+                  <img
+                    {...responsiveSrc(c.image)}
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                    alt={c.name}
+                    className="h-full w-full object-cover transition-transform duration-700 md:group-hover:scale-110"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 text-white">
+                  <h3 className="font-display font-bold text-base sm:text-xl">{c.name}</h3>
+                  <p className="hidden sm:block text-[10px] sm:text-xs text-white/70 mt-1 opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-300">
+                    {c.blurb}
+                  </p>
+                </div>
+              </Link>
+            );
+            return (
+              <React.Fragment key={c.slug}>
+                <div className="hidden md:block">
+                  <Reveal delay={(i + 1) * 0.05} className="h-full">
+                    {content}
+                  </Reveal>
+                </div>
+                <div className="block md:hidden">{content}</div>
+              </React.Fragment>
+            );
+          })}
         </div>
       </section>
 
@@ -320,7 +279,7 @@ function Home() {
             </p>
             <h2 className="font-display font-black text-3xl sm:text-5xl">Our Most Loved Beds</h2>
             <p className="text-muted-foreground mt-3 max-w-md">
-              Rated 4.7/5 by UK sleepers — free delivery, mattress included on every bed.
+              Trusted by UK sleepers since 2018 — free UK delivery, 30-day returns.
             </p>
           </div>
           <Link

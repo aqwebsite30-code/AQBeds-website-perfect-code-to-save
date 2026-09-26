@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { Resend } from "resend";
 import { formatGBP } from "../utils/format";
-import { PRODUCTS } from "../features/products/data/products";
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
@@ -42,7 +41,7 @@ interface OrderEmailData {
 
 export const sendOrderEmail = createServerFn({ method: "POST" }).handler(async (ctx: any) => {
   try {
-    const NOTIFICATION_EMAIL = "aqbeds2822@gmail.com";
+    const NOTIFICATION_EMAIL = "info@aqbeds.com";
     const data = ctx?.data || ctx;
     const { customer, items, total: clientTotal } = data;
 
@@ -250,7 +249,7 @@ export async function sendChatNotification(sessionId: string, content: string) {
     const resend = getResend();
     await resend.emails.send({
       from: "AQ Beds <onboarding@resend.dev>",
-      to: ["aqbeds2822@gmail.com"],
+      to: ["info@aqbeds.com"],
       subject: `New Chat Message — Session #${shortId}`,
       html: `
         <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #f9fafb; padding: 20px;">

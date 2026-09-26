@@ -20,8 +20,10 @@ import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as FaqsRouteImport } from './routes/faqs'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReturnsRouteImport } from './routes/returns'
+import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as SizeGuideRouteImport } from './routes/size-guide'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -94,6 +96,11 @@ const ReturnsRoute = ReturnsRouteImport.update({
   path: '/returns',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -102,6 +109,11 @@ const SearchRoute = SearchRouteImport.update({
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SizeGuideRoute = SizeGuideRouteImport.update({
+  id: '/size-guide',
+  path: '/size-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -197,8 +209,10 @@ export interface FileRoutesByFullPath {
   '/faqs': typeof FaqsRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
   '/admin/chat': typeof AdminChatRoute
@@ -227,8 +241,10 @@ export interface FileRoutesByTo {
   '/faqs': typeof FaqsRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
   '/admin/chat': typeof AdminChatRoute
@@ -258,8 +274,10 @@ export interface FileRoutesById {
   '/faqs': typeof FaqsRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
+  '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
   '/admin/chat': typeof AdminChatRoute
@@ -291,8 +309,10 @@ export interface FileRouteTypes {
     | '/faqs'
     | '/privacy'
     | '/returns'
+    | '/reviews'
     | '/search'
     | '/shop'
+    | '/size-guide'
     | '/terms'
     | '/wishlist'
     | '/admin/chat'
@@ -321,8 +341,10 @@ export interface FileRouteTypes {
     | '/faqs'
     | '/privacy'
     | '/returns'
+    | '/reviews'
     | '/search'
     | '/shop'
+    | '/size-guide'
     | '/terms'
     | '/wishlist'
     | '/admin/chat'
@@ -351,8 +373,10 @@ export interface FileRouteTypes {
     | '/faqs'
     | '/privacy'
     | '/returns'
+    | '/reviews'
     | '/search'
     | '/shop'
+    | '/size-guide'
     | '/terms'
     | '/wishlist'
     | '/admin/chat'
@@ -383,8 +407,10 @@ export interface RootRouteChildren {
   FaqsRoute: typeof FaqsRoute
   PrivacyRoute: typeof PrivacyRoute
   ReturnsRoute: typeof ReturnsRoute
+  ReviewsRoute: typeof ReviewsRoute
   SearchRoute: typeof SearchRoute
   ShopRoute: typeof ShopRoute
+  SizeGuideRoute: typeof SizeGuideRoute
   TermsRoute: typeof TermsRoute
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
@@ -470,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReturnsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -482,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/shop'
       fullPath: '/shop'
       preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/size-guide': {
+      id: '/size-guide'
+      path: '/size-guide'
+      fullPath: '/size-guide'
+      preLoaderRoute: typeof SizeGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -663,8 +703,10 @@ const rootRouteChildren: RootRouteChildren = {
   FaqsRoute: FaqsRoute,
   PrivacyRoute: PrivacyRoute,
   ReturnsRoute: ReturnsRoute,
+  ReviewsRoute: ReviewsRoute,
   SearchRoute: SearchRoute,
   ShopRoute: ShopRoute,
+  SizeGuideRoute: SizeGuideRoute,
   TermsRoute: TermsRoute,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,

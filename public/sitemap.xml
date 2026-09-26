@@ -43,12 +43,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.aqbeds.com/search</loc>
-    <lastmod>2026-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
     <loc>https://www.aqbeds.com/category/all-beds</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -282,7 +276,18 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+    <url>
+    <loc>https://www.aqbeds.com/size-guide</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
+    <loc>https://www.aqbeds.com/reviews</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>  <url>
     <loc>https://www.aqbeds.com/privacy</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>yearly</changefreq>

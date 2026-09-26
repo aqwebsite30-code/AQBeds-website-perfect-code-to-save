@@ -438,7 +438,14 @@ function RootComponent() {
       >
         {!isAdmin && <Header />}
 
-        <main className={`flex-1 ${!isAdmin ? "pb-20 sm:pb-0" : ""}`}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-brand focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-white focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
+
+        <main id="main-content" className={`flex-1 ${!isAdmin ? "pb-20 sm:pb-0" : ""}`}>
           <Outlet />
         </main>
 

@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { CATEGORIES, type Category, getByCategory } from "@/features/products/data/products";
 import { getDbProducts } from "@/lib/products";
+import { responsiveSrc } from "@/lib/responsive-image";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { motion } from "framer-motion";
 
@@ -45,7 +46,10 @@ export const Route = createFileRoute("/category/$slug")({
             { name: "twitter:card", content: "summary_large_image" },
             { name: "twitter:title", content: title },
             { name: "twitter:description", content: desc },
-            { name: "twitter:image", content: `https://www.aqbeds.com${loaderData.category.image}` },
+            {
+              name: "twitter:image",
+              content: `https://www.aqbeds.com${loaderData.category.image}`,
+            },
           ]
         : [],
       links: loaderData
@@ -87,11 +91,24 @@ function CategoryPage() {
   const dbFiltered = (dbProducts || []).filter((p) => p.category === category.slug);
   const products = [...dbFiltered, ...staticProducts];
 
+  // Count label uses the right noun for the category (WP-B.3)
+  const noun = category.slug.includes("wardrobe")
+    ? "wardrobe"
+    : category.slug === "sofas"
+      ? "sofa"
+      : category.slug === "mattresses"
+        ? "mattress"
+        : category.slug === "headboards"
+          ? "headboard"
+          : "bed";
+  const countLabel = `${products.length} ${products.length === 1 ? noun : `${noun}s`}`;
+
   return (
     <div className="animate-fade-in bg-background min-h-screen">
       <section className="relative w-full aspect-video overflow-hidden bg-background">
         <img
-          src={category.image}
+          {...responsiveSrc(category.image)}
+          sizes="100vw"
           alt={category.name}
           className="h-full w-full object-cover object-center"
         />
@@ -116,9 +133,7 @@ function CategoryPage() {
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-4 py-10">
-        <div className="text-sm text-muted-foreground mb-6">
-          {products.length} {products.length === 1 ? "bed" : "products"}
-        </div>
+        <div className="text-sm text-muted-foreground mb-6">{countLabel}</div>
         {products.length === 0 ? (
           <div className="text-center py-24 bg-card rounded-3xl border border-dashed border-border">
             <div className="text-5xl mb-4">✨</div>

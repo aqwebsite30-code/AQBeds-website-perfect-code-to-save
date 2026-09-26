@@ -4,11 +4,11 @@ function normalizeImages(images) {
   return images.map((img) => (img.startsWith("http") ? img : `${BASE_URL}${img}`));
 }
 
-const PRODUCTS_CATALOG = [
+const PRODUCTS_CATALOG_RAW = [
   {
     id: "ambessador",
     slug: "ambessador",
-    name: "Luxury Ambessador Bed",
+    name: "Ambessador Bed",
     description:
       "Your bedroom's new centrepiece — with a secret. The Ambessador pairs a deep-buttoned, hand-finished headboard with a solid timber frame you'll never hear creak. Choose crushed or plush velvet in 16 colours, then add gas-lift ottoman storage that swallows duvets, suitcases and everything else you'd rather not look at. Every Ambessador includes a comfort mattress free — so it's sleep-ready the day it arrives. Free UK delivery · 30-day returns · 1-year warranty · Pay on delivery available.",
     basePrice: 360,
@@ -25,8 +25,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "arizona",
     slug: "arizona",
-    name: "Luxury Arizona Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Arizona Bed",
     basePrice: 250,
     originalPrice: 300,
     category: "luxury-beds",
@@ -42,7 +41,6 @@ const PRODUCTS_CATALOG = [
     id: "bunk-beds",
     slug: "bunk-beds",
     name: "Bunk Bed",
-    description: "Sturdy metal bunk bed, available in Double or Trio configuration. Choice of Gray or White finish.",
     basePrice: 449,
     originalPrice: 500,
     category: "ottoman-beds",
@@ -57,8 +55,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "divan",
     slug: "divan",
-    name: "Luxury Divan Bed",
-    description: "Our Luxury Divan base with custom headboard options. Choose from Panel, Simple, Cube or the premium Chesterfield design. Optional drawer storage available.",
+    name: "Divan Bed",
     basePrice: 185,
     originalPrice: 200,
     category: "divan-beds",
@@ -90,8 +87,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "florida-bed",
     slug: "florida-bed",
-    name: "Luxury Florida Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Florida Bed",
     basePrice: 210,
     originalPrice: 250,
     category: "luxury-beds",
@@ -106,8 +102,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "golden-wave-bed",
     slug: "golden-wave-bed",
-    name: "Luxury Golden Wave Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Golden Wave Bed",
     basePrice: 250,
     originalPrice: 300,
     category: "luxury-beds",
@@ -122,8 +117,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "hilton",
     slug: "hilton",
-    name: "Luxury Hilton Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Hilton Bed",
     basePrice: 210,
     originalPrice: 250,
     category: "luxury-beds",
@@ -138,8 +132,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "luxury-cube-bed",
     slug: "luxury-cube-bed",
-    name: "Luxury Cube Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Cube Bed",
     basePrice: 210,
     originalPrice: 250,
     category: "luxury-beds",
@@ -154,8 +147,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "oxford-wingback",
     slug: "oxford-wingback",
-    name: "Luxury Oxford Wingback Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Oxford Wingback Bed",
     basePrice: 250,
     originalPrice: 300,
     category: "luxury-beds",
@@ -170,8 +162,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "panel-line",
     slug: "panel-line",
-    name: "Luxury Panel Line Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Panel Line Bed",
     basePrice: 210,
     originalPrice: 250,
     category: "luxury-beds",
@@ -186,8 +177,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "panel-line-bumper",
     slug: "panel-line-bumper",
-    name: "Luxury Panel Line Bumper Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Panel Line Bumper Bed",
     basePrice: 210,
     originalPrice: 250,
     category: "luxury-beds",
@@ -202,8 +192,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "panel-line-gold-strip",
     slug: "panel-line-gold-strip",
-    name: "Luxury Panel Line Gold Strip Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Panel Line Gold Strip Bed",
     basePrice: 250,
     originalPrice: 300,
     category: "luxury-beds",
@@ -218,8 +207,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "panel-wing-back",
     slug: "panel-wing-back",
-    name: "Luxury Panel Wing Back Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Panel Wing Back Bed",
     basePrice: 210,
     originalPrice: 250,
     category: "luxury-beds",
@@ -234,8 +222,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "sleigh",
     slug: "sleigh",
-    name: "Luxury Sleigh Bed",
-    description: "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+    name: "Sleigh Bed",
     basePrice: 250,
     originalPrice: 300,
     category: "luxury-beds",
@@ -251,7 +238,6 @@ const PRODUCTS_CATALOG = [
     id: "alina-wardrobe",
     slug: "alina-wardrobe",
     name: "Alina Wardrobe",
-    description: "The Alina Wardrobe offers versatile storage with multiple door and drawer configurations. From compact 2-door units to massive 8-door sets, customize it with mirrors and chests to fit your room perfectly.",
     basePrice: 150,
     originalPrice: 220,
     category: "wardrobes",
@@ -267,7 +253,6 @@ const PRODUCTS_CATALOG = [
     id: "sliding-wardrobe",
     slug: "sliding-wardrobe",
     name: "Sliding Wardrobe",
-    description: "Modern Sliding Wardrobe with glass or mirror accents. A perfect space-saver for contemporary bedrooms. Available in widths from 100cm to 250cm with optional professional assembly.",
     basePrice: 260,
     originalPrice: 320,
     category: "sliding-wardrobes",
@@ -283,7 +268,6 @@ const PRODUCTS_CATALOG = [
     id: "alaska-sofa",
     slug: "alaska-sofa",
     name: "Alaska Sofa",
-    description: "Premium handcrafted Alaska Sofa, customized for luxury and comfort.",
     basePrice: 280,
     originalPrice: 310,
     category: "sofas",
@@ -299,7 +283,6 @@ const PRODUCTS_CATALOG = [
     id: "ashton-sofa",
     slug: "ashton-sofa",
     name: "Ashton Sofa",
-    description: "Premium handcrafted Ashton Sofa, customized for luxury and comfort.",
     basePrice: 300,
     originalPrice: 350,
     category: "sofas",
@@ -314,8 +297,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "berlin-sofa-bed",
     slug: "berlin-sofa-bed",
-    name: "Berlin Sofa bed",
-    description: "Premium handcrafted Berlin Sofa bed, customized for luxury and comfort.",
+    name: "Berlin Sofa Bed",
     basePrice: 380,
     originalPrice: 400,
     category: "sofas",
@@ -331,7 +313,6 @@ const PRODUCTS_CATALOG = [
     id: "chesterfield-sofa",
     slug: "chesterfield-sofa",
     name: "Chesterfield Sofa",
-    description: "Premium handcrafted Chesterfield Sofa, customized for luxury and comfort.",
     basePrice: 370,
     originalPrice: 400,
     category: "sofas",
@@ -347,7 +328,6 @@ const PRODUCTS_CATALOG = [
     id: "diamontee-sofa",
     slug: "diamontee-sofa",
     name: "Diamontee Sofa",
-    description: "Premium handcrafted Diamontee Sofa, customized for luxury and comfort.",
     basePrice: 280,
     originalPrice: 300,
     category: "sofas",
@@ -362,7 +342,6 @@ const PRODUCTS_CATALOG = [
     id: "dino-sofa",
     slug: "dino-sofa",
     name: "Dino Sofa",
-    description: "Premium handcrafted Dino Sofa, customized for luxury and comfort.",
     basePrice: 280,
     originalPrice: 320,
     category: "sofas",
@@ -378,7 +357,6 @@ const PRODUCTS_CATALOG = [
     id: "dylan-sofa",
     slug: "dylan-sofa",
     name: "Dylan Sofa",
-    description: "Premium handcrafted Dylan Sofa, customized for luxury and comfort.",
     basePrice: 185,
     originalPrice: 220,
     category: "sofas",
@@ -394,7 +372,6 @@ const PRODUCTS_CATALOG = [
     id: "harrison-sofa",
     slug: "harrison-sofa",
     name: "Harrison Sofa",
-    description: "Premium handcrafted Harrison Sofa, customized for luxury and comfort.",
     basePrice: 310,
     originalPrice: 350,
     category: "sofas",
@@ -410,7 +387,6 @@ const PRODUCTS_CATALOG = [
     id: "lily-sofa",
     slug: "lily-sofa",
     name: "Lily Sofa",
-    description: "Premium handcrafted Lily Sofa, customized for luxury and comfort.",
     basePrice: 310,
     originalPrice: 350,
     category: "sofas",
@@ -426,7 +402,6 @@ const PRODUCTS_CATALOG = [
     id: "lucca-anton-sofa-bed",
     slug: "lucca-anton-sofa-bed",
     name: "Lucca & Anton Sofa Bed",
-    description: "Premium handcrafted Lucca & Anton Sofa Bed, customized for luxury and comfort.",
     basePrice: 650,
     originalPrice: 700,
     category: "sofas",
@@ -441,8 +416,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "maya-sofa",
     slug: "maya-sofa",
-    name: "Maya sofa",
-    description: "Premium handcrafted Maya sofa, customized for luxury and comfort.",
+    name: "Maya Sofa",
     basePrice: 280,
     originalPrice: 320,
     category: "sofas",
@@ -457,8 +431,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "olympia-sofa",
     slug: "olympia-sofa",
-    name: "Olympia sofa",
-    description: "Premium handcrafted Olympia sofa, customized for luxury and comfort.",
+    name: "Olympia Sofa",
     basePrice: 280,
     originalPrice: 320,
     category: "sofas",
@@ -474,7 +447,6 @@ const PRODUCTS_CATALOG = [
     id: "shanon-sofa",
     slug: "shanon-sofa",
     name: "Shanon Sofa",
-    description: "Premium handcrafted Shanon Sofa, customized for luxury and comfort.",
     basePrice: 280,
     originalPrice: 320,
     category: "sofas",
@@ -489,8 +461,7 @@ const PRODUCTS_CATALOG = [
   {
     id: "u-shape-sofa",
     slug: "u-shape-sofa",
-    name: "U shape Sofa",
-    description: "Premium handcrafted U shape Sofa, customized for luxury and comfort.",
+    name: "U Shape Sofa",
     basePrice: 590,
     originalPrice: 620,
     category: "sofas",
@@ -506,7 +477,6 @@ const PRODUCTS_CATALOG = [
     id: "verona-sofa",
     slug: "verona-sofa",
     name: "Verona Sofa",
-    description: "Premium handcrafted Verona Sofa, customized for luxury and comfort.",
     basePrice: 280,
     originalPrice: 320,
     category: "sofas",
@@ -519,5 +489,14 @@ const PRODUCTS_CATALOG = [
     ],
   },
 ];
+
+// Names + descriptions come from the single source of truth used by the storefront.
+const COPY = require("../features/products/data/product-copy.json");
+
+const PRODUCTS_CATALOG = PRODUCTS_CATALOG_RAW.map((p) => {
+  const c = COPY[p.slug];
+  if (!c) return p;
+  return { ...p, name: c.name || p.name, description: c.description || p.description };
+});
 
 module.exports = { PRODUCTS_CATALOG, BASE_URL, normalizeImages };

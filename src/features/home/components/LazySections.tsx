@@ -87,6 +87,10 @@ export function PromoBanner() {
 }
 
 export default function Testimonials({ reviews }: { reviews: any[] }) {
+  const avg = reviews.length
+    ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+    : 0;
+  const stars = Math.round(avg);
   return (
     <section className="mx-auto max-w-7xl px-4 pb-24">
       <Reveal className="text-center mb-14">
@@ -99,10 +103,13 @@ export default function Testimonials({ reviews }: { reviews: any[] }) {
         </p>
         <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand/[0.06] px-4 py-2">
           <span className="text-brand text-sm tracking-tight" aria-hidden="true">
-            ★★★★☆
+            {"★".repeat(stars)}
+            {"☆".repeat(5 - stars)}
           </span>
-          <span className="text-sm font-semibold text-foreground/80">4.7/5 from 128 reviews</span>
-          <span className="text-xs text-muted-foreground">across AQ Beds</span>
+          <span className="text-sm font-semibold text-foreground/80">
+            {avg.toFixed(1)}/5 from {reviews.length} review{reviews.length === 1 ? "" : "s"}
+          </span>
+          <span className="text-xs text-muted-foreground">from customers on this site</span>
         </div>
       </Reveal>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

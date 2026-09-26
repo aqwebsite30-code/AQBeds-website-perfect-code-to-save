@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Heart, ShoppingBag, ArrowRight } from "lucide-react";
 import type { Product } from "@/features/products/data/products";
 import { formatGBP } from "@/lib/utils/format";
+import { responsiveSrc } from "@/lib/responsive-image";
 import { useWishlist } from "@/features/cart/store/cart";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -30,7 +31,8 @@ export function ProductCard({ product }: { product: Product }) {
         )}
 
         <img
-          src={product.images[0]}
+          {...responsiveSrc(product.images[0])}
+          sizes="(min-width: 1280px) 300px, (min-width: 1024px) 33vw, 50vw"
           alt={`${product.name} — AQ Beds`}
           loading="lazy"
           decoding="async"

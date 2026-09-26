@@ -1,3 +1,7 @@
+// Hand-written per-product copy (description + meta description).
+// Single source of truth — also consumed by src/lib/products-catalog.cjs.
+import productCopy from "./product-copy.json";
+
 export type Category =
   | "all-beds"
   | "ottoman-beds"
@@ -161,6 +165,7 @@ export interface Product {
   onSale?: boolean;
   images: string[];
   description: string;
+  metaDescription?: string | null;
   colors: { name: string; hex?: string; image?: string }[];
   sizes: Option[];
   fabrics: Option[];
@@ -293,7 +298,7 @@ function product(
     images: opts.images ?? [image, image, image],
     description:
       opts.description ??
-      "Includes Standard Comfort Mattress (FREE) and a premium handcrafted headboard. Built in the UK with the finest materials for a royal sleep experience.",
+      "Handcrafted in the UK, with free UK delivery, 30-day returns and a 1-year warranty.",
     colors: opts.colors ?? CRUSHED_VELVET_COLORS,
     sizes: opts.sizes ?? [],
     fabrics: opts.fabrics ?? STANDARD_FABRICS,
@@ -319,7 +324,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "ambessador",
-    "Luxury Ambessador Bed",
+    "Ambessador Bed",
     "luxury-beds",
     360,
     400,
@@ -356,7 +361,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "arizona",
-    "Luxury Arizona Bed",
+    "Arizona Bed",
     "luxury-beds",
     250,
     300,
@@ -425,7 +430,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "divan",
-    "Luxury Divan Bed",
+    "Divan Bed",
     "divan-beds",
     185,
     200,
@@ -458,8 +463,6 @@ const baseProducts: Product[] = [
         "/all products img/Divan/3 Cube head board.webp",
         "/all products img/Divan/4 Chesterfiled head board.webp",
       ],
-      description:
-        "Our Luxury Divan base with custom headboard options. Choose from Panel, Simple, Cube or the premium Chesterfield design. Optional drawer storage available.",
     },
   ),
 
@@ -519,7 +522,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "florida-bed",
-    "Luxury Florida Bed",
+    "Florida Bed",
     "luxury-beds",
     210,
     250,
@@ -556,7 +559,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "golden-wave-bed",
-    "Luxury Golden Wave Bed",
+    "Golden Wave Bed",
     "luxury-beds",
     250,
     300,
@@ -593,7 +596,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "hilton",
-    "Luxury Hilton Bed",
+    "Hilton Bed",
     "luxury-beds",
     210,
     250,
@@ -629,7 +632,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "luxury-cube-bed",
-    "Luxury Cube Bed",
+    "Cube Bed",
     "luxury-beds",
     210,
     250,
@@ -666,7 +669,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "oxford-wingback",
-    "Luxury Oxford Wingback Bed",
+    "Oxford Wingback Bed",
     "luxury-beds",
     250,
     300,
@@ -703,7 +706,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "panel-line",
-    "Luxury Panel Line Bed",
+    "Panel Line Bed",
     "luxury-beds",
     210,
     250,
@@ -738,7 +741,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "panel-line-bumper",
-    "Luxury Panel Line Bumper Bed",
+    "Panel Line Bumper Bed",
     "luxury-beds",
     210,
     250,
@@ -775,7 +778,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "panel-line-gold-strip",
-    "Luxury Panel Line Gold Strip Bed",
+    "Panel Line Gold Strip Bed",
     "luxury-beds",
     250,
     300,
@@ -810,7 +813,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "panel-wing-back",
-    "Luxury Panel Wing Back Bed",
+    "Panel Wing Back Bed",
     "luxury-beds",
     210,
     250,
@@ -847,7 +850,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "sleigh",
-    "Luxury Sleigh Bed",
+    "Sleigh Bed",
     "luxury-beds",
     250,
     300,
@@ -1015,7 +1018,6 @@ const baseProducts: Product[] = [
         "/Sofas/Alaska Sofaa/alaska-sofa-gallery-2.webp",
         "/Sofas/Alaska Sofaa/alaska-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted Alaska Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1061,7 +1063,6 @@ const baseProducts: Product[] = [
         "/Sofas/Ashton Sofa/ashton-sofa-gallery-2.webp",
         "/Sofas/Ashton Sofa/ashton-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted Ashton Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1080,7 +1081,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "berlin-sofa-bed",
-    "Berlin Sofa bed",
+    "Berlin Sofa Bed",
     "sofas",
     380,
     400,
@@ -1098,7 +1099,6 @@ const baseProducts: Product[] = [
         "/Sofas/Berlin Sofa Bed/berlin-sofa-bed-gallery-2.webp",
         "/Sofas/Berlin Sofa Bed/berlin-sofa-bed-gallery-3.webp",
       ],
-      description: "Premium handcrafted Berlin Sofa bed, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1143,7 +1143,6 @@ const baseProducts: Product[] = [
         "/Sofas/Chesterfield Sofa/chesterfield-sofa-gallery-2.webp",
         "/Sofas/Chesterfield Sofa/chesterfield-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted Chesterfield Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1188,7 +1187,6 @@ const baseProducts: Product[] = [
         "/Sofas/Diamontee sofa/diamontee-sofa-gallery-1.webp",
         "/Sofas/Diamontee sofa/diamontee-sofa-gallery-2.webp",
       ],
-      description: "Premium handcrafted Diamontee Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1226,7 +1224,6 @@ const baseProducts: Product[] = [
       "/Sofas/Dino sofa/dino-sofa-gallery-2.webp",
       "/Sofas/Dino sofa/dino-sofa-gallery-3.webp",
     ],
-    description: "Premium handcrafted Dino Sofa, customized for luxury and comfort.",
     storageOptions: [],
     headboardOptions: [],
     mattressOptions: [],
@@ -1263,7 +1260,6 @@ const baseProducts: Product[] = [
       "/Sofas/Dylan Sofa/dylan-sofa-gallery-2.webp",
       "/Sofas/Dylan Sofa/dylan-sofa-gallery-3.webp",
     ],
-    description: "Premium handcrafted Dylan Sofa, customized for luxury and comfort.",
     storageOptions: [],
     headboardOptions: [],
     mattressOptions: [],
@@ -1307,7 +1303,6 @@ const baseProducts: Product[] = [
         "/Sofas/Harrison Sofa/harrison-sofa-gallery-2.webp",
         "/Sofas/Harrison Sofa/harrison-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted Harrison Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1346,7 +1341,6 @@ const baseProducts: Product[] = [
       "/Sofas/Lily Sofa/lily-sofa-gallery-2.webp",
       "/Sofas/Lily Sofa/lily-sofa-gallery-3.webp",
     ],
-    description: "Premium handcrafted Lily Sofa, customized for luxury and comfort.",
     storageOptions: [],
     headboardOptions: [],
     mattressOptions: [],
@@ -1384,7 +1378,6 @@ const baseProducts: Product[] = [
         "/Sofas/Lucca & Anton Sofa Bed/lucca-anton-sofa-bed-gallery-2.webp",
         "/Sofas/Lucca & Anton Sofa Bed/lucca-anton-sofa-bed-gallery-3.webp",
       ],
-      description: "Premium handcrafted Lucca & Anton Sofa Bed, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1401,7 +1394,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   // MAYA SOFA
   // ══════════════════════════════════════════════════════════════════════════
-  product("maya-sofa", "Maya sofa", "sofas", 280, 320, "/Sofas/Maya Sofa/maya-sofa-main.webp", {
+  product("maya-sofa", "Maya Sofa", "sofas", 280, 320, "/Sofas/Maya Sofa/maya-sofa-main.webp", {
     sizes: [
       { name: "1 seater", extraPrice: 0 },
       { name: "2 seater", extraPrice: 30 },
@@ -1423,7 +1416,6 @@ const baseProducts: Product[] = [
       "/Sofas/Maya Sofa/maya-sofa-gallery-2.webp",
       "/Sofas/Maya Sofa/maya-sofa-gallery-3.webp",
     ],
-    description: "Premium handcrafted Maya sofa, customized for luxury and comfort.",
     storageOptions: [],
     headboardOptions: [],
     mattressOptions: [],
@@ -1441,7 +1433,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "olympia-sofa",
-    "Olympia sofa",
+    "Olympia Sofa",
     "sofas",
     280,
     320,
@@ -1468,7 +1460,6 @@ const baseProducts: Product[] = [
         "/Sofas/Olympia Sofa/olympia-sofa-gallery-2.webp",
         "/Sofas/Olympia Sofa/olympia-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted Olympia sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1514,7 +1505,6 @@ const baseProducts: Product[] = [
         "/Sofas/Shanon Sofa/shanon-sofa-gallery-2.webp",
         "/Sofas/Shanon Sofa/shanon-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted Shanon Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1533,7 +1523,7 @@ const baseProducts: Product[] = [
   // ══════════════════════════════════════════════════════════════════════════
   product(
     "u-shape-sofa",
-    "U shape Sofa",
+    "U Shape Sofa",
     "sofas",
     590,
     620,
@@ -1553,7 +1543,6 @@ const baseProducts: Product[] = [
         "/Sofas/U Shape Sofa/u-shape-sofa-gallery-2.webp",
         "/Sofas/U Shape Sofa/u-shape-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted U shape Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1599,7 +1588,6 @@ const baseProducts: Product[] = [
         "/Sofas/Verona Sofa/verona-sofa-gallery-2.webp",
         "/Sofas/Verona Sofa/verona-sofa-gallery-3.webp",
       ],
-      description: "Premium handcrafted Diamontee Sofa, customized for luxury and comfort.",
       storageOptions: [],
       headboardOptions: [],
       mattressOptions: [],
@@ -1616,26 +1604,32 @@ const baseProducts: Product[] = [
 
 export const PRODUCTS: Product[] = baseProducts
   .map((p) => {
-    let desc: string;
+    const copy: { name?: string; description?: string; meta?: string } =
+      (productCopy as Record<string, { name?: string; description?: string; meta?: string }>)[
+        p.slug
+      ] ?? {};
+    const name = copy.name ?? p.name;
     const keywords: string[] = [];
-    const n = p.name.toLowerCase();
+    const n = name.toLowerCase();
     const c = p.category.toLowerCase();
 
     if (c.includes("bed") && c !== "bedroom-furniture") keywords.push("bed", "beds");
     if (c.includes("sofa")) keywords.push("sofa", "sofas");
     if (c.includes("mattress")) keywords.push("mattress", "mattresses");
-    if (n.includes("luxury")) keywords.push("luxury");
     if (c.includes("divan") || n.includes("divan")) keywords.push("divan");
     if (c.includes("ottoman") || n.includes("ottoman")) keywords.push("ottoman");
     if (n.includes("chesterfield")) keywords.push("chesterfield");
     if (c.includes("wardrobe")) keywords.push("wardrobe", "wardrobes");
 
-    if (p.category === "sofas") {
-      desc = `The ${p.name} is a premium handcrafted sofa available in multiple sizes including 1 seater, 2 seater, 3 seater, 4 seater, 5 seater and 2+3 corner sofa sets. Choose from luxury fabrics: Plush Velvet, Manchester Fabric, Plush Manchester, Jumbo Cord, Chenille Fabric and Crushed Velvet. Available in colours: Grey, Black, Cream, Silver, Mink, Beige, Navy, Steel, Gold, Chocolate, Camel, Blue, Pink, Mustard, Teal, Green, Lilac, Rose Gold, Copper, Yellow, Pearl, Midnight, Pebble, Sky Blue, Light Grey, Truffle, Kensington Grey, Dark Grey, Teal Grey, Shimmer, Velvet. Also available as Corner Sofa, U Shape Sofa, L Shape Sofa. Professional assembly available. Free UK delivery from AQ Beds.`;
-    } else {
-      desc = `The ${p.name} is a premium handcrafted bed built in the UK for ultimate luxury and comfort. Available in elegant fabrics like Plush Velvet and Crushed Velvet, this bespoke ${p.category.replace("-", " ")} features solid timber construction, optional Ottoman gas lift storage or Divan drawers, and ships straight to your door. Upgrade your bedroom with the perfect blend of style, durability, and practical storage using our highly rated ${p.name}.`;
-    }
-    return { ...p, description: desc, keywords };
+    return {
+      ...p,
+      name,
+      description:
+        copy.description ??
+        "Handcrafted in the UK with free UK delivery, 30-day returns and a 1-year warranty.",
+      metaDescription: copy.meta ?? null,
+      keywords,
+    };
   })
   .sort((a, b) => a.basePrice - b.basePrice);
 

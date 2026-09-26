@@ -18,7 +18,7 @@ const mockProducts = [
   },
   {
     id: "2",
-    name: "Luxury Divan Base",
+    name: "Divan Base",
     category: "Beds",
     price: "£420",
     stock: 8,

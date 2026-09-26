@@ -40,8 +40,8 @@ function Terms() {
           <p className="mt-3">
             AQ Beds supplies beds, mattresses, sofas and bedroom furniture across the United
             Kingdom. Contact us at{" "}
-            <a href="mailto:aqbeds2822@gmail.com" className="text-brand underline">
-              aqbeds2822@gmail.com
+            <a href="mailto:info@aqbeds.com" className="text-brand underline">
+              info@aqbeds.com
             </a>{" "}
             or{" "}
             <a href="tel:+447519791128" className="text-brand underline">

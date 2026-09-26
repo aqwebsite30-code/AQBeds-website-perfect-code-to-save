@@ -25,6 +25,20 @@ export const Route = createFileRoute("/faqs")({
       },
     ],
     links: [{ rel: "canonical", href: "https://www.aqbeds.com/faqs" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        }),
+      },
+    ],
   }),
   component: FAQsPage,
 });
@@ -58,22 +72,22 @@ const faqs = [
   {
     question: "What materials are used in AQ Beds?",
     answer:
-      "Our frames are built from solid hardwood and high-grade engineered wood. We use premium foam, pocket springs, and a range of luxurious fabrics including linen, velvet, and leather. All materials are sourced with durability and comfort in mind.",
+      "Frames are built from solid timber and high-grade engineered wood, upholstered in crushed velvet, plush velvet, chenille or soft matte. Mattresses range from a standard comfort foam up to 2000 pocket sprung, with orthopaedic options available.",
   },
   {
     question: "Do you offer assembly or installation services?",
     answer:
-      "Most beds are designed for easy self-assembly and come with all required tools and instructions. We also offer a white-glove assembly service in selected areas — simply select it at checkout or contact us for a quote.",
+      "Most beds are designed for easy self-assembly and come with all the tools and instructions you need. Professional assembly can be added on the product page before you add to basket, or ask us for a quote on WhatsApp.",
   },
   {
     question: "What payment methods do you accept?",
     answer:
-      "We accept all major debit and credit cards, Cash on Delivery (COD), and online bank transfers. All payments are processed securely.",
+      "Cash on Delivery across the UK — you check the bed before you pay, and pay the driver. Online card payment is not switched on yet; message us on WhatsApp if you would like to pay in advance.",
   },
   {
     question: "How do I track my delivery?",
     answer:
-      "Once your order ships, you'll receive a tracking link by email and SMS. You can use it to follow your delivery in real time and get an estimated arrival window.",
+      "Every order gets a confirmation email with your order number. Reply to that email or message us on WhatsApp with the number and we'll give you the current delivery window.",
   },
   {
     question: "What happens if my bed arrives damaged?",

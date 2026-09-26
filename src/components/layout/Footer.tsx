@@ -44,7 +44,7 @@ export function Footer() {
                 icon: MessageCircle,
                 label: "WhatsApp",
               },
-              { href: "mailto:aqbeds2822@gmail.com", icon: Mail, label: "Email" },
+              { href: "mailto:info@aqbeds.com", icon: Mail, label: "Email" },
             ].map(({ href, icon: Icon, label }) => (
               <a
                 key={label}
@@ -90,11 +90,12 @@ export function Footer() {
           </h4>
           <ul className="space-y-3 text-sm text-white/60">
             {[
-              { label: "About AQ Beds", to: "/about" },
-              { label: "Contact Us", to: "/contact" },
-              { label: "FAQs", to: "/faqs" },
-              { label: "Delivery Info", to: "/delivery" },
-              { label: "Returns Policy", to: "/returns" },
+    { label: "About AQ Beds", to: "/about" },
+    { label: "Contact Us", to: "/contact" },
+    { label: "Customer Reviews", to: "/reviews" },
+    { label: "FAQs", to: "/faqs" },
+    { label: "Delivery Info", to: "/delivery" },
+    { label: "Returns Policy", to: "/returns" },
             ].map((l) => (
               <li key={l.label}>
                 <Link to={l.to as any} className="hover:text-white transition-colors">
@@ -113,8 +114,8 @@ export function Footer() {
           <ul className="space-y-4 text-sm text-white/60">
             <li className="flex items-start gap-2.5">
               <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-[#5b9bd5]" />
-              <a href="mailto:aqbeds2822@gmail.com" className="hover:text-white transition-colors">
-                aqbeds2822@gmail.com
+              <a href="mailto:info@aqbeds.com" className="hover:text-white transition-colors">
+                info@aqbeds.com
               </a>
             </li>
             <li className="flex items-start gap-2.5">

@@ -48,12 +48,12 @@ function Contact() {
           <p className="text-sm text-muted-foreground mt-1">Fastest response</p>
         </a>
         <a
-          href="mailto:aqbeds2822@gmail.com"
+          href="mailto:info@aqbeds.com"
           className="p-6 rounded-3xl border border-border bg-card hover-lift"
         >
           <Mail className="h-6 w-6 text-brand" />
           <h2 className="font-display font-semibold mt-3">Email</h2>
-          <p className="text-sm text-muted-foreground mt-1">aqbeds2822@gmail.com</p>
+          <p className="text-sm text-muted-foreground mt-1">info@aqbeds.com</p>
         </a>
         <a
           href="tel:+447519791128"

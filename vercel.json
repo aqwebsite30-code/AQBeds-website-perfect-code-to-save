@@ -14,6 +14,10 @@
       "dest": "/api/meta-catalog.js"
     },
     {
+      "src": "/api/ai-chat",
+      "dest": "/api/ai-chat.js"
+    },
+    {
       "src": "/",
       "dest": "/api/index"
     },

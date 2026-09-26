@@ -42,8 +42,8 @@ function Privacy() {
             AQ Beds ("we", "us", "our") is a UK-based retailer of beds, mattresses, sofas and
             bedroom furniture. For data protection purposes we are the data controller of your
             personal data. Contact us at{" "}
-            <a href="mailto:aqbeds2822@gmail.com" className="text-brand underline">
-              aqbeds2822@gmail.com
+            <a href="mailto:info@aqbeds.com" className="text-brand underline">
+              info@aqbeds.com
             </a>{" "}
             or by phone on{" "}
             <a href="tel:+447519791128" className="text-brand underline">
@@ -126,8 +126,8 @@ function Privacy() {
           </ul>
           <p className="mt-3">
             To exercise any of these, email{" "}
-            <a href="mailto:aqbeds2822@gmail.com" className="text-brand underline">
-              aqbeds2822@gmail.com
+            <a href="mailto:info@aqbeds.com" className="text-brand underline">
+              info@aqbeds.com
             </a>
             . We respond within 30 days. You may also complain to the Information Commissioner's
             Office (ICO) at{" "}

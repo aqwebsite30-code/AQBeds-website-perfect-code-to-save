@@ -11,6 +11,43 @@ import { ProductCard } from "@/features/products/components/ProductCard";
 import { Truck, ShieldCheck, Heart, Minus, Plus, ShoppingBag, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Meta description must never be cut mid-word (WP-A.2).
+const META_MAX = 158;
+const RISK_TAIL = "Free UK delivery, 30-day returns & 1-year warranty.";
+
+function wordBoundaryTruncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = slice.slice(0, lastSpace > 40 ? lastSpace : max);
+  return cut.replace(/[.,;:·\-–—\s]+$/, "") + ".";
+}
+
+function buildMetaDescription(product: {
+  metaDescription?: string | null;
+  description: string;
+}): string {
+  const meta = product.metaDescription?.trim();
+  if (meta && meta.length <= META_MAX && /[a-z0-9]\.$/i.test(meta)) return meta;
+  if (product.description.length <= META_MAX) return product.description;
+  // Prefer description + the risk-reversal tail when both fit
+  const body = product.description.split(" · ")[0];
+  const withTail = `${body} ${RISK_TAIL}`;
+  if (withTail.length <= META_MAX) return withTail;
+  return wordBoundaryTruncate(withTail, META_MAX);
+}
+
+// Keep every PDP title between 30 and 60 characters (WP-H meta pass).
+function buildTitle(product: { name: string; category: string }): string {
+  const suffix =
+    product.category === "sofas"
+      ? "Velvet Sofas"
+      : product.category.includes("wardrobe")
+        ? "Wardrobes"
+        : "Storage & Mattress";
+  return `${product.name} | ${suffix} - AQ Beds`;
+}
+
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
     const dbProduct = await getDbProductBySlug({ data: params.slug });
@@ -40,17 +77,17 @@ export const Route = createFileRoute("/product/$slug")({
     meta: loaderData
       ? [
           {
-            title: `${loaderData.product.name} | ${loaderData.product.category === "sofas" ? "Velvet Sofa" : "Storage & Mattress Included"} - AQ Beds`,
+            title: buildTitle(loaderData.product),
           },
           {
             name: "description",
-            content: `${loaderData.product.description.slice(0, 140)}. Free UK delivery, 30-day returns & 1-year warranty.`,
+            content: buildMetaDescription(loaderData.product),
           },
           {
             property: "og:title",
-            content: `${loaderData.product.name} | Storage & Mattress Included - AQ Beds`,
+            content: buildTitle(loaderData.product),
           },
-          { property: "og:description", content: loaderData.product.description.slice(0, 155) },
+          { property: "og:description", content: buildMetaDescription(loaderData.product) },
           {
             property: "og:image",
             content: `https://www.aqbeds.com${loaderData.product.images[0]}`,
@@ -62,7 +99,7 @@ export const Route = createFileRoute("/product/$slug")({
           { property: "og:type", content: "product" },
           { name: "twitter:card", content: "summary_large_image" },
           { name: "twitter:title", content: `${loaderData.product.name} - AQ Beds` },
-          { name: "twitter:description", content: loaderData.product.description.slice(0, 155) },
+          { name: "twitter:description", content: buildMetaDescription(loaderData.product) },
           {
             name: "twitter:image",
             content: `https://www.aqbeds.com${loaderData.product.images[0]}`,
@@ -818,7 +855,18 @@ function ProductPage() {
             )}
 
             {isSofa ? (
-              <OptionGroup label="3. Size & Mattress" value={size?.name}>
+              <OptionGroup
+                label="3. Size & Mattress"
+                value={size?.name}
+                action={
+                  <Link
+                    to="/size-guide"
+                    className="text-xs font-semibold text-brand underline underline-offset-2"
+                  >
+                    Size guide
+                  </Link>
+                }
+              >
                 <Pills
                   items={product.sizes}
                   active={size}
@@ -830,6 +878,14 @@ function ProductPage() {
               <OptionGroup
                 label={product.fabrics.length > 0 ? "3. Size" : "Size"}
                 value={size?.name}
+                action={
+                  <Link
+                    to="/size-guide"
+                    className="text-xs font-semibold text-brand underline underline-offset-2"
+                  >
+                    Size guide
+                  </Link>
+                }
               >
                 {product.mattressOptions.length > 0 && (
                   <div className="grid grid-cols-2 gap-2 mb-4">
@@ -1103,16 +1159,21 @@ function ProductPage() {
 function OptionGroup({
   label,
   value,
+  action,
   children,
 }: {
   label: string;
   value?: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="mt-8">
       <div className="flex items-baseline justify-between mb-4 pb-2 border-b border-border/50">
-        <h2 className="font-display font-bold text-base tracking-wide">{label}</h2>
+        <div className="flex items-baseline gap-3">
+          <h2 className="font-display font-bold text-base tracking-wide">{label}</h2>
+          {action}
+        </div>
         {value && <span className="text-sm font-semibold text-brand/80">{value}</span>}
       </div>
       {children}
